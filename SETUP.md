@@ -38,13 +38,18 @@ const SUPABASE_ANON = 'eyJ...YOUR_ANON_KEY...';               // ← paste key h
 ## STEP 3 — Create your first Admin account
 
 1. Go to your Supabase project → **Authentication → Users → Add user**
-2. Enter your email + a strong password → Create user
-3. Go to **SQL Editor** → run this (replace values):
+2. Enter your email + a strong password → click **Create user**
+   > **Important:** Supabase may create the account with an unconfirmed email.
+   > After creating the user, click their row in the Users list and choose
+   > **"Send magic link"** or look for a **Confirm** button to auto-confirm the
+   > email — otherwise the login will fail with "Email not confirmed".
+3. Copy the user's **UUID** shown in the Users table (looks like `a1b2c3d4-…`)
+4. Go to **SQL Editor** → run this (replace the values with your own):
 
 ```sql
 insert into profiles (id, emp_id, full_name, role, unit)
 values (
-  '<paste-user-id-from-auth-users-table>',
+  '<paste-user-UUID-from-auth-users-table>',
   'ADMIN-001',
   'Your Name',
   'admin',
@@ -52,8 +57,13 @@ values (
 );
 ```
 
-4. Now log in to the app with that email/password
-5. Use the **Admin tab** to create all other employee accounts
+5. Now log in to the app with that email/password
+6. Use the **Admin tab** to create all other employee accounts
+
+> **Troubleshooting — "Profile not found" after login:**
+> This means Step 4 (the INSERT SQL) was not run, or the UUID was wrong.
+> Check Supabase → Table Editor → profiles to verify the row exists.
+> If it's missing, run the INSERT again with the correct UUID.
 
 ---
 

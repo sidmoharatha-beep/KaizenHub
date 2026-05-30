@@ -62,18 +62,23 @@ create policy "Manager can update" on submissions
     exists (select 1 from profiles where id = auth.uid() and role in ('manager','admin'))
   );
 
--- 4. HELPER: create a profile automatically when a user signs up
+-- 4. HELPER: create a profile automatically when a user signs up via the app
+--    (skipped when users are created manually via the Supabase dashboard with no metadata)
 create or replace function handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
-  insert into profiles (id, emp_id, full_name, role, unit)
-  values (
-    new.id,
-    new.raw_user_meta_data->>'emp_id',
-    new.raw_user_meta_data->>'full_name',
-    new.raw_user_meta_data->>'role',
-    new.raw_user_meta_data->>'unit'
-  );
+  if (new.raw_user_meta_data->>'emp_id') is not null
+     and (new.raw_user_meta_data->>'full_name') is not null
+     and (new.raw_user_meta_data->>'role') is not null then
+    insert into profiles (id, emp_id, full_name, role, unit)
+    values (
+      new.id,
+      new.raw_user_meta_data->>'emp_id',
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'role',
+      new.raw_user_meta_data->>'unit'
+    );
+  end if;
   return new;
 end;
 $$;
