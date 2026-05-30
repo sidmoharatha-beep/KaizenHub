@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KaizenHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --navy:#0D1B4B;--blue:#1A3A8F;--sky:#2E7DD1;
+  --gold:#FFD166;--accent:#F5A623;
+  --bg:#F0F4FF;--card:#fff;--text:#0D1B4B;
+  --muted:#6B7BAA;--border:#D6E0FF;
+  --green:#0f6e4a;--gbg:#D1FAE5;
+  --red:#991b1b;--rbg:#FEE2E2;
+  --yellow:#856404;--ybg:#FFF3CD;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── AUTH ── */
+#auth-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.auth-logo{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+.auth-logo span{color:var(--sky);}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:32px;}
+.auth-card{background:#fff;border-radius:20px;border:1.5px solid var(--border);padding:24px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(13,27,75,.08);}
+.auth-card h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;}
+.fg input,.fg select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;-webkit-appearance:none;}
+.fg input:focus,.fg select:focus{border-color:var(--sky);}
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:4px;}
+.btn-primary:active{opacity:.85;}
+.auth-err{color:#991b1b;font-size:13px;margin-top:10px;text-align:center;display:none;}
+
+/* ── APP SHELL ── */
+#app{display:none;padding-bottom:72px;}
+.topbar{background:linear-gradient(135deg,var(--navy),var(--blue));padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-left h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;}
+.topbar-left h2 span{color:var(--gold);}
+.topbar-left p{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.role-pill{font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:20px;text-transform:uppercase;}
+.role-operator{background:rgba(255,209,102,.2);color:var(--gold);}
+.role-manager{background:rgba(100,200,150,.2);color:#7DFFB2;}
+.role-admin{background:rgba(200,100,100,.2);color:#FFB3B3;}
+.btn-logout{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* ── PAGES ── */
+.page{display:none;padding:16px;}
+.page.active{display:block;}
+.section-label{font-size:11px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--sky);margin-bottom:12px;}
+.card{background:#fff;border-radius:16px;border:1.5px solid var(--border);padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(13,27,75,.05);}
+
+/* ── FORM ── */
+.form-row{margin-bottom:13px;}
+.form-row label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;-webkit-appearance:none;}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--sky);}
+.form-row textarea{resize:vertical;min-height:88px;}
+
+/* ── STATUS BADGES ── */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.4px;}
+.badge-pending{background:var(--ybg);color:var(--yellow);}
+.badge-approved{background:var(--gbg);color:var(--green);}
+.badge-rejected{background:var(--rbg);color:var(--red);}
+
+/* ── SUBMISSION CARDS ── */
+.sub-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:14px;margin-bottom:10px;border-left:3px solid var(--sky);}
+.sub-card.approved{border-left-color:#1a7a4a;}
+.sub-card.rejected{border-left-color:#c0392b;}
+.sub-card h4{font-size:14px;font-weight:600;color:var(--navy);}
+.sub-meta{font-size:12px;color:var(--muted);margin:3px 0 6px;}
+.sub-excerpt{font-size:12px;color:#444;margin-bottom:8px;}
+.sub-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* ── REVIEW ACTIONS ── */
+.action-row{display:flex;gap:8px;margin-top:10px;}
+.btn-approve{flex:1;padding:9px;background:var(--gbg);color:var(--green);border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-reject{flex:1;padding:9px;background:var(--rbg);color:var(--red);border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.feedback-box{width:100%;margin-top:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;}
+.feedback-box:focus{border-color:var(--sky);}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.kpi-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:14px 12px;text-align:center;}
+.kpi-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--navy);}
+.kpi-label{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── LEADERBOARD ── */
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--muted);width:28px;text-align:center;}
+.lb-rank.top{color:var(--accent);}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--navy));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;}
+.lb-info{flex:1;}
+.lb-info h4{font-size:14px;font-weight:600;}
+.lb-info p{font-size:11px;color:var(--muted);}
+.lb-pts{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--sky);}
+
+/* ── REWARDS ── */
+.reward-hero{background:linear-gradient(135deg,var(--navy),var(--sky));border-radius:18px;padding:24px;text-align:center;margin-bottom:14px;}
+.reward-hero .pts-big{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--gold);}
+.reward-hero .pts-label{color:rgba(255,255,255,.7);font-size:13px;}
+.reward-hero .emp-name{color:#fff;font-size:16px;font-weight:600;margin-bottom:6px;}
+.ledger-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.ledger-row:last-child{border-bottom:none;}
+.ledger-pts{font-weight:700;font-size:14px;color:var(--green);}
+
+/* ── ADMIN ── */
+.user-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.user-row:last-child{border-bottom:none;}
+.user-info{flex:1;}
+.user-info h4{font-size:14px;font-weight:600;}
+.user-info p{font-size:11px;color:var(--muted);}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--border);display:flex;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 8px;cursor:pointer;gap:3px;}
+.nav-item svg{width:22px;height:22px;stroke:var(--muted);stroke-width:1.8;fill:none;transition:stroke .2s;}
+.nav-item span{font-size:10px;color:var(--muted);font-weight:500;}
+.nav-item.active svg{stroke:var(--sky);}
+.nav-item.active span{color:var(--sky);}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:40px 16px;color:var(--muted);font-size:14px;line-height:1.7;}
+.loading{text-align:center;padding:30px;color:var(--muted);font-size:14px;}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.divider{text-align:center;font-size:12px;color:var(--muted);margin:12px 0;}
+.saving-chip{font-size:12px;color:var(--green);font-weight:600;}
+.feedback-text{font-size:12px;color:var(--red);margin-top:4px;font-style:italic;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN
+════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-logo">Kaizen<span>Hub</span></div>
+  <div class="auth-sub">Sign in to your account</div>
+
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <div class="fg">
+      <label>Email / Employee ID</label>
+      <input type="email" id="login-email" placeholder="you@company.com" autocomplete="username"/>
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    <div class="auth-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     APP SHELL
+════════════════════════════════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>Kaizen<span>Hub</span></h2>
+      <p id="topbar-sub">Loading...</p>
+    </div>
+    <div class="topbar-right">
+      <span class="role-pill" id="role-pill"></span>
+      <button class="btn-logout" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- SUBMIT PAGE -->
+  <div class="page" id="page-submit">
+    <p class="section-label" style="margin-top:4px">New Submission</p>
+    <div class="card">
+      <div class="form-row"><label>Idea Type</label>
+        <select id="f-type">
+          <option value="">Select type</option>
+          <option>Kaizen (Process Improvement)</option>
+          <option>QC Project</option>
+          <option>Safety / Hazard</option>
+          <option>Cost Saving</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Idea Title</label><input id="f-title" type="text" placeholder="Short title for your idea"/></div>
+      <div class="form-row"><label>Description</label><textarea id="f-desc" placeholder="Describe the problem and your improvement idea in detail..."></textarea></div>
+      <div class="form-row"><label>Estimated Cost Saving (₹/month)</label><input id="f-saving" type="number" placeholder="0 if not applicable"/></div>
+      <button class="btn-primary" onclick="submitIdea()">Submit Idea ✦</button>
+    </div>
+  </div>
+
+  <!-- MY IDEAS PAGE -->
+  <div class="page" id="page-myideas">
+    <p class="section-label" style="margin-top:4px">My Submissions</p>
+    <div id="my-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- REVIEW PAGE (manager/admin) -->
+  <div class="page" id="page-review">
+    <p class="section-label" style="margin-top:4px">Screening Queue</p>
+    <div id="review-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page" id="page-dashboard">
+    <p class="section-label" style="margin-top:4px">Platform KPIs</p>
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <p class="section-label">Live Leaderboard</p>
+    <div class="card" id="leaderboard"></div>
+  </div>
+
+  <!-- REWARDS PAGE -->
+  <div class="page" id="page-rewards">
+    <div id="reward-content"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div class="page" id="page-admin">
+    <p class="section-label" style="margin-top:4px">Add Employee Account</p>
+    <div class="card">
+      <div class="form-row"><label>Full Name</label><input id="a-name" type="text" placeholder="e.g. Ramesh Kumar"/></div>
+      <div class="form-row"><label>Email</label><input id="a-email" type="email" placeholder="emp@company.com"/></div>
+      <div class="form-row"><label>Employee ID</label><input id="a-empid" type="text" placeholder="e.g. EMP-1042"/></div>
+      <div class="form-row"><label>Unit / Department</label>
+        <select id="a-unit">
+          <option value="">Select unit</option>
+          <option>Production Line A</option>
+          <option>Production Line B</option>
+          <option>Quality Control</option>
+          <option>Maintenance</option>
+          <option>Logistics</option>
+          <option>Safety</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Role</label>
+        <select id="a-role">
+          <option value="operator">Operator (Shop Floor)</option>
+          <option value="manager">Manager / SIC / HOD</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Temporary Password</label><input id="a-pass" type="text" placeholder="Min 8 characters — share with employee"/></div>
+      <button class="btn-primary" onclick="createEmployee()">Create Account</button>
+    </div>
+    <p class="section-label">All Users</p>
+    <div class="card" id="users-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- BOTTOM NAV (rebuilt per role) -->
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+</div>
+
+<script>
+// ─── INIT SUPABASE ───────────────────────────────────────────
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+let currentUser = null;
+let currentProfile = null;
+
+// ─── TOAST ───────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── AUTH ────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  if (!email || !pass) { showErr('Please enter email and password.'); return; }
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { showErr(error.message); return; }
+  await loadApp(data.user);
+}
+
+function showErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+async function loadApp(user) {
+  currentUser = user;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = profile;
+
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbar-sub').textContent = `${profile.full_name} · ${profile.emp_id}`;
+
+  const pillEl = document.getElementById('role-pill');
+  pillEl.textContent = profile.role;
+  pillEl.className = `role-pill role-${profile.role}`;
+
+  buildNav(profile.role);
+  goTo(profile.role === 'operator' ? 'submit' : 'review');
+}
+
+// ─── NAV ─────────────────────────────────────────────────────
+function buildNav(role) {
+  const nav = document.getElementById('bottom-nav');
+  const tabs = [
+    { id:'submit',    icon:'<path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',    label:'Submit',    roles:['operator'] },
+    { id:'myideas',   icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/>',       label:'My Ideas',  roles:['operator','manager','admin'] },
+    { id:'review',    icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',label:'Review',roles:['manager','admin'] },
+    { id:'dashboard', icon:'<rect x="3" y="13" width="4" height="8"/><rect x="10" y="9" width="4" height="12"/><rect x="17" y="5" width="4" height="16"/>',label:'Dashboard',roles:['manager','admin','operator'] },
+    { id:'rewards',   icon:'<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',label:'Rewards',roles:['operator','manager','admin'] },
+    { id:'admin',     icon:'<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',            label:'Admin',     roles:['admin'] },
+  ];
+  nav.innerHTML = tabs
+    .filter(t => t.roles.includes(role))
+    .map(t => `
+      <div class="nav-item" id="nav-${t.id}" onclick="goTo('${t.id}')">
+        <svg viewBox="0 0 24 24">${t.icon}</svg>
+        <span>${t.label}</span>
+      </div>`)
+    .join('');
+}
+
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if (pg) pg.classList.add('active');
+  const nv = document.getElementById('nav-' + page);
+  if (nv) nv.classList.add('active');
+  window.scrollTo(0, 0);
+  if (page === 'myideas')   renderMyIdeas();
+  if (page === 'review')    renderReview();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'rewards')   renderRewards();
+  if (page === 'admin')     renderAdmin();
+}
+
+// ─── SUBMIT ──────────────────────────────────────────────────
+async function submitIdea() {
+  const type  = document.getElementById('f-type').value;
+  const title = document.getElementById('f-title').value.trim();
+  const desc  = document.getElementById('f-desc').value.trim();
+  const saving= parseInt(document.getElementById('f-saving').value) || 0;
+  if (!type || !title || !desc) { toast('⚠ Please fill all required fields'); return; }
+
+  const { error } = await sb.from('submissions').insert({
+    user_id: currentUser.id,
+    emp_id: currentProfile.emp_id,
+    full_name: currentProfile.full_name,
+    unit: currentProfile.unit,
+    type, title, description: desc, saving
+  });
+  if (error) { toast('Error: ' + error.message); return; }
+
+  document.getElementById('f-type').selectedIndex = 0;
+  ['f-title','f-desc','f-saving'].forEach(id => document.getElementById(id).value = '');
+  toast('✓ Idea submitted successfully!');
+}
+
+// ─── MY IDEAS ────────────────────────────────────────────────
+async function renderMyIdeas() {
+  const el = document.getElementById('my-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+
+  let query = sb.from('submissions').select('*').order('created_at', { ascending: false });
+  // operators see only their own; managers/admins see all
+  if (currentProfile.role === 'operator') {
+    query = query.eq('user_id', currentUser.id);
+  }
+
+  const { data, error } = await query;
+  if (error) { el.innerHTML = '<div class="empty">Error loading submissions.</div>'; return; }
+  if (!data.length) { el.innerHTML = '<div class="empty">No submissions yet.<br>Go submit your first idea!</div>'; return; }
+
+  el.innerHTML = data.map(s => `
+    <div class="sub-card ${s.status.toLowerCase()}">
+      <h4>${s.title}</h4>
+      <div class="sub-meta">${s.type} · ${s.unit} · ${fmtDate(s.created_at)}</div>
+      ${currentProfile.role !== 'operator' ? `<div class="sub-meta" style="color:var(--navy);font-weight:600">${s.full_name} (${s.emp_id})</div>` : ''}
+      <div class="sub-excerpt">${s.description.substring(0,120)}${s.description.length>120?'...':''}</div>
+      <div class="sub-footer">
+        <span class="badge badge-${s.status.toLowerCase()}">${s.status}</span>
+        ${s.saving ? `<span class="saving-chip">💰 ₹${s.saving.toLocaleString('en-IN')}/mo saved</span>` : ''}
+        ${s.points ? `<span style="font-size:11px;font-weight:700;color:var(--green)">+${s.points} pts</span>` : ''}
+      </div>
+      ${s.feedback ? `<div class="feedback-text">Feedback: ${s.feedback}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ─── REVIEW (manager/admin) ───────────────────────────────────
+async function renderReview() {
+  const el = document.getElementById('review-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  const { data, error } = await sb.from('submissions').select('*').eq('status','Pending').order('created_at');
+  if (error) { el.innerHTML = '<div class="empty">Error loading queue.</div>'; return; }
+  if (!data.length) { el.innerHTML = '<div class="empty">✓ All clear!<br>No pending submissions.</div>'; return; }
+
+  el.innerHTML = data.map(s => `
+    <div class="sub-card" id="sub-${s.id}">
+      <h4>${s.title}</h4>
+      <div class="sub-meta"><b>${s.full_name}</b> (${s.emp_id}) · ${s.unit}</div>
+      <div class="sub-meta">${s.type} · ${fmtDate(s.created_at)}</div>
+      <div class="sub-excerpt">${s.description}</div>
+      ${s.saving ? `<div class="saving-chip" style="margin-bottom:8px">💰 Est. saving: ₹${s.saving.toLocaleString('en-IN')}/month</div>` : ''}
+      <textarea class="feedback-box" id="fb-${s.id}" placeholder="Optional feedback to operator..." rows="2"></textarea>
+      <div class="action-row">
+        <button class="btn-approve" onclick="reviewAction(${s.id},'Approved')">✓ Approve</button>
+        <button class="btn-reject"  onclick="reviewAction(${s.id},'Rejected')">✗ Return</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function reviewAction(id, status) {
+  const feedback = document.getElementById('fb-' + id)?.value.trim() || '';
+  const points = status === 'Approved' ? Math.floor(50 + Math.random() * 150) : 0;
+
+  const { error } = await sb.from('submissions').update({
+    status, points, feedback,
+    reviewed_by: currentProfile.full_name,
+    reviewed_at: new Date().toISOString()
+  }).eq('id', id);
+
+  if (error) { toast('Error: ' + error.message); return; }
+  toast(status === 'Approved' ? '✓ Approved & points awarded' : '↩ Returned to submitter');
+  renderReview();
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────
+async function renderDashboard() {
+  const { data, error } = await sb.from('submissions').select('*');
+  if (error || !data) return;
+
+  const approved = data.filter(s => s.status === 'Approved');
+  const pending  = data.filter(s => s.status === 'Pending');
+  const saving   = approved.reduce((a, b) => a + (b.saving || 0), 0);
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi-card"><div class="kpi-val">${data.length}</div><div class="kpi-label">Total Submissions</div></div>
+    <div class="kpi-card"><div class="kpi-val">${approved.length}</div><div class="kpi-label">Approved</div></div>
+    <div class="kpi-card"><div class="kpi-val">${pending.length}</div><div class="kpi-label">Pending</div></div>
+    <div class="kpi-card"><div class="kpi-val">₹${(saving/1000).toFixed(1)}K</div><div class="kpi-label">Monthly Savings</div></div>
+  `;
+
+  const emp = {};
+  approved.forEach(s => {
+    if (!emp[s.emp_id]) emp[s.emp_id] = { name: s.full_name, pts: 0, count: 0 };
+    emp[s.emp_id].pts += s.points;
+    emp[s.emp_id].count++;
+  });
+  const sorted = Object.values(emp).sort((a, b) => b.pts - a.pts).slice(0, 8);
+  const lb = document.getElementById('leaderboard');
+  if (!sorted.length) { lb.innerHTML = '<div class="empty" style="padding:16px">No approved ideas yet.</div>'; return; }
+  lb.innerHTML = sorted.map((e, i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${i<3?'top'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="avatar">${e.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
+      <div class="lb-info"><h4>${e.name}</h4><p>${e.count} idea${e.count>1?'s':''}</p></div>
+      <div class="lb-pts">${e.pts} pts</div>
+    </div>
+  `).join('');
+}
+
+// ─── REWARDS ─────────────────────────────────────────────────
+async function renderRewards() {
+  const el = document.getElementById('reward-content');
+  const uid = currentUser.id;
+  const { data } = await sb.from('submissions').select('*').eq('status','Approved').eq('user_id', uid).order('created_at',{ascending:false});
+  const total = (data||[]).reduce((a,b)=>a+b.points,0);
+  const name  = currentProfile.full_name;
+
+  el.innerHTML = `
+    <div class="reward-hero">
+      <div class="emp-name">${name}</div>
+      <div class="pts-big">${total}</div>
+      <div class="pts-label">Reward Points Earned · ${currentProfile.emp_id}</div>
+    </div>
+    ${data && data.length ? `
+    <div class="card">
+      <p class="section-label" style="margin-bottom:12px">Points Ledger</p>
+      ${data.map(s=>`
+        <div class="ledger-row">
+          <div>
+            <div style="font-size:13px;font-weight:500">${s.title}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtDate(s.created_at)} · ${s.type}</div>
+          </div>
+          <div class="ledger-pts">+${s.points}</div>
+        </div>
+      `).join('')}
+    </div>` : '<div class="empty">No approved ideas yet.<br>Submit ideas to earn points!</div>'}
+  `;
+}
+
+// ─── ADMIN ───────────────────────────────────────────────────
+async function createEmployee() {
+  const name  = document.getElementById('a-name').value.trim();
+  const email = document.getElementById('a-email').value.trim();
+  const empid = document.getElementById('a-empid').value.trim();
+  const unit  = document.getElementById('a-unit').value;
+  const role  = document.getElementById('a-role').value;
+  const pass  = document.getElementById('a-pass').value;
+  if (!name||!email||!empid||!unit||!pass) { toast('⚠ Fill all fields'); return; }
+  if (pass.length < 8) { toast('⚠ Password must be 8+ characters'); return; }
+
+  // Use admin signup — requires service role key for production,
+  // but signUp works for initial setup
+  const { data, error } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { emp_id: empid, full_name: name, role, unit } }
+  });
+  if (error) { toast('Error: ' + error.message); return; }
+
+  toast(`✓ Account created for ${name}`);
+  ['a-name','a-email','a-empid','a-pass'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('a-unit').selectedIndex = 0;
+  renderAdmin();
+}
+
+async function renderAdmin() {
+  const el = document.getElementById('users-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  const { data, error } = await sb.from('profiles').select('*').order('created_at');
+  if (error) { el.innerHTML = '<div class="empty">Error loading users.</div>'; return; }
+  if (!data.length) { el.innerHTML = '<div class="empty">No users yet.</div>'; return; }
+
+  el.innerHTML = data.map(u => `
+    <div class="user-row">
+      <div class="avatar">${u.full_name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
+      <div class="user-info">
+        <h4>${u.full_name}</h4>
+        <p>${u.emp_id} · ${u.unit||'—'}</p>
+      </div>
+      <span class="badge badge-${u.role==='admin'?'rejected':u.role==='manager'?'pending':'approved'}">${u.role}</span>
+    </div>
+  `).join('');
+}
+
+// ─── UTILS ───────────────────────────────────────────────────
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ─── BOOT ────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    await loadApp(session.user);
+  }
+});
+</script>
+</body>
+</html>
