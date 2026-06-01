@@ -12,8 +12,8 @@ import { execSync } from 'child_process';
 // ── EDIT THESE ────────────────────────────────────────────────
 const ADMIN = {
   emp_id:    'ADMIN-001',
-  full_name: 'System Admin',
-  email:     'admin@yourcompany.com',
+  full_name: 'Sidhartha',
+  email:     'sidmoharatha@gmail.com',
   password:  'Admin@1234',          // change this immediately after first login!
   unit:      'Management',
 };
