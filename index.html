@@ -153,6 +153,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tab-btns{display:flex;gap:8px;margin-bottom:14px;}
 .tab-btn{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;background:#fff;color:var(--muted);}
 .tab-btn.active{background:var(--sky);color:#fff;border-color:var(--sky);}
+
+/* ── FILE UPLOAD ── */
+.file-upload-area{border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
+.file-upload-area:hover{border-color:var(--sky);}
+.file-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.file-upload-area .upload-icon{font-size:22px;margin-bottom:4px;}
+.file-upload-area p{font-size:12px;color:var(--muted);}
+.file-chosen{font-size:12px;color:var(--green);font-weight:600;margin-top:5px;display:none;}
+
+/* ── SUSA DASHBOARD ── */
+.susa-banner{background:linear-gradient(135deg,#7b1c1c,#c0392b);border-radius:14px;padding:16px;margin-bottom:12px;color:#fff;}
+.susa-banner h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;}
+.susa-banner p{font-size:12px;opacity:.85;}
+.susa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.susa-kpi{background:#fff;border-radius:12px;border:1.5px solid #fecaca;padding:12px;text-align:center;}
+.susa-kpi .val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#991b1b;}
+.susa-kpi .lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.susa-checklist{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:14px;margin-bottom:10px;}
+.susa-checklist h4{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.chk-item:last-child{border-bottom:none;}
+.chk-item .chk-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.chk-item .chk-text{flex:1;color:var(--text);}
+.chk-item .chk-severity{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;}
+.sev-high{background:#fecaca;color:#991b1b;}
+.sev-med{background:#fef3c7;color:#92400e;}
+.sev-low{background:#d1fae5;color:#065f46;}
+.susa-hint{background:#fff7ed;border-radius:10px;border:1.5px solid #fed7aa;padding:12px;font-size:12px;color:#92400e;margin-bottom:10px;}
+
+/* ── APPROVER BADGE ── */
+.approver-badge{display:inline-block;background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -229,12 +260,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <!-- SUBMIT PAGE -->
   <div class="page" id="page-submit">
     <p class="section-label" style="margin-top:4px">New Submission</p>
+
+    <!-- SUSA Industry Dashboard (shown when SUSA Hazard selected) -->
+    <div id="susa-dashboard" style="display:none">
+      <div class="susa-banner">
+        <h3>⚠️ SUSA Hazard Report</h3>
+        <p>Safety Unsafe Act / Unsafe Situation — Industry Safety Dashboard</p>
+      </div>
+      <div class="susa-hint">📋 Before submitting, review the checklist below. Identify which category your hazard falls under and describe it clearly in the form.</div>
+      <div class="susa-grid">
+        <div class="susa-kpi"><div class="val" id="susa-total">—</div><div class="lbl">Total Hazards Reported</div></div>
+        <div class="susa-kpi"><div class="val" id="susa-open">—</div><div class="lbl">Open / Pending</div></div>
+        <div class="susa-kpi"><div class="val" id="susa-resolved">—</div><div class="lbl">Resolved</div></div>
+        <div class="susa-kpi"><div class="val" id="susa-rate" style="color:#f59e0b">—</div><div class="lbl">Resolution Rate</div></div>
+      </div>
+      <div class="susa-checklist">
+        <h4>🔍 SUSA Category Checklist</h4>
+        <div class="chk-item"><span class="chk-icon">⚡</span><div class="chk-text">Electrical hazard — exposed wiring, improper grounding</div><span class="chk-severity sev-high">HIGH</span></div>
+        <div class="chk-item"><span class="chk-icon">🔥</span><div class="chk-text">Fire / Explosion risk — flammable materials, blocked exits</div><span class="chk-severity sev-high">HIGH</span></div>
+        <div class="chk-item"><span class="chk-icon">🧪</span><div class="chk-text">Chemical exposure — improper storage, no PPE usage</div><span class="chk-severity sev-high">HIGH</span></div>
+        <div class="chk-item"><span class="chk-icon">🏗️</span><div class="chk-text">Working at height — missing guard rails, unstable platforms</div><span class="chk-severity sev-high">HIGH</span></div>
+        <div class="chk-item"><span class="chk-icon">🦺</span><div class="chk-text">PPE non-compliance — not wearing required safety gear</div><span class="chk-severity sev-med">MED</span></div>
+        <div class="chk-item"><span class="chk-icon">🚧</span><div class="chk-text">Unsafe housekeeping — slippery floors, blocked walkways</div><span class="chk-severity sev-med">MED</span></div>
+        <div class="chk-item"><span class="chk-icon">🔩</span><div class="chk-text">Machinery guarding — missing covers, bypass of safety devices</div><span class="chk-severity sev-med">MED</span></div>
+        <div class="chk-item"><span class="chk-icon">💡</span><div class="chk-text">Ergonomic risk — repetitive strain, awkward postures</div><span class="chk-severity sev-low">LOW</span></div>
+        <div class="chk-item"><span class="chk-icon">🪟</span><div class="chk-text">Poor lighting / ventilation in work area</div><span class="chk-severity sev-low">LOW</span></div>
+        <div class="chk-item"><span class="chk-icon">📦</span><div class="chk-text">Improper material handling / storage stacking</div><span class="chk-severity sev-low">LOW</span></div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="form-row"><label>Idea Type</label>
-        <select id="f-type">
+        <select id="f-type" onchange="onTypeChange(this.value)">
           <option value="">Select type</option>
           <option>Kaizen (Process Improvement)</option>
           <option>QC Project</option>
+          <option>SUSA Hazard</option>
           <option>Safety / Hazard</option>
           <option>Cost Saving</option>
         </select>
@@ -242,6 +303,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="form-row"><label>Idea Title</label><input id="f-title" type="text" placeholder="Short title for your idea"/></div>
       <div class="form-row"><label>Description</label><textarea id="f-desc" placeholder="Describe the problem and your improvement idea in detail..."></textarea></div>
       <div class="form-row"><label>Estimated Cost Saving (₹/month)</label><input id="f-saving" type="number" placeholder="0 if not applicable"/></div>
+
+      <!-- Approver dropdown -->
+      <div class="form-row" id="approver-row">
+        <label>Send To (Approver) <span style="color:var(--red)">*</span></label>
+        <select id="f-approver">
+          <option value="">Loading managers...</option>
+        </select>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Your submission will be routed to this manager for review</div>
+      </div>
+
+      <!-- File attachment (optional) -->
+      <div class="form-row">
+        <label>Attach File <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none">(optional — photo, document, sketch)</span></label>
+        <div class="file-upload-area" onclick="document.getElementById('f-file').click()">
+          <div class="upload-icon">📎</div>
+          <p>Tap to attach a file</p>
+          <p style="font-size:11px;margin-top:2px">JPG, PNG, PDF, DOCX — max 5MB</p>
+          <input type="file" id="f-file" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="onFileChosen(this)"/>
+        </div>
+        <div class="file-chosen" id="file-chosen-name">📎 <span id="f-file-name"></span> <button onclick="clearFile()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕ Remove</button></div>
+      </div>
+
       <button class="btn-primary" onclick="submitIdea()">Submit Idea ✦</button>
     </div>
   </div>
@@ -440,6 +523,7 @@ function goTo(page) {
   const nv = document.getElementById('nav-' + page);
   if (nv) nv.classList.add('active');
   window.scrollTo(0, 0);
+  if (page === 'submit')    loadManagers();
   if (page === 'myideas')   renderMyIdeas();
   if (page === 'review')    renderReview();
   if (page === 'dashboard') renderDashboard();
@@ -447,23 +531,102 @@ function goTo(page) {
   if (page === 'admin')     { switchAdminTab('create'); }
 }
 
+// ─── SUBMIT HELPERS ──────────────────────────────────────────
+function onFileChosen(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('⚠ File too large (max 5MB)'); input.value = ''; return; }
+  document.getElementById('f-file-name').textContent = file.name;
+  document.getElementById('file-chosen-name').style.display = 'block';
+}
+
+function clearFile() {
+  document.getElementById('f-file').value = '';
+  document.getElementById('file-chosen-name').style.display = 'none';
+  document.getElementById('f-file-name').textContent = '';
+}
+
+async function onTypeChange(val) {
+  const susa = val === 'SUSA Hazard';
+  document.getElementById('susa-dashboard').style.display = susa ? 'block' : 'none';
+  if (susa) await loadSusaStats();
+}
+
+async function loadSusaStats() {
+  const { ok, data } = await apiFetch('/api/submissions');
+  if (!ok) return;
+  const all = (data.submissions || []).filter(s => s.type === 'SUSA Hazard');
+  const total = all.length;
+  const open = all.filter(s => s.status === 'Pending').length;
+  const resolved = all.filter(s => s.status === 'Approved').length;
+  const rate = total ? Math.round((resolved / total) * 100) : 0;
+  document.getElementById('susa-total').textContent = total;
+  document.getElementById('susa-open').textContent = open;
+  document.getElementById('susa-resolved').textContent = resolved;
+  document.getElementById('susa-rate').textContent = rate + '%';
+}
+
+async function loadManagers() {
+  const sel = document.getElementById('f-approver');
+  // fetch all users — only works if role allows; for operator we add a dedicated endpoint
+  const { ok, data } = await apiFetch('/api/managers');
+  if (!ok || !data.managers || !data.managers.length) {
+    sel.innerHTML = '<option value="">No managers found</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Select approver...</option>' +
+    data.managers.map(m => `<option value="${esc(m.id)}">${esc(m.full_name)} (${esc(m.unit)})</option>`).join('');
+}
+
 // ─── SUBMIT ──────────────────────────────────────────────────
 async function submitIdea() {
-  const type  = document.getElementById('f-type').value;
-  const title = document.getElementById('f-title').value.trim();
-  const desc  = document.getElementById('f-desc').value.trim();
-  const saving= document.getElementById('f-saving').value;
+  const type     = document.getElementById('f-type').value;
+  const title    = document.getElementById('f-title').value.trim();
+  const desc     = document.getElementById('f-desc').value.trim();
+  const saving   = document.getElementById('f-saving').value;
+  const approver = document.getElementById('f-approver').value;
+  const fileInput = document.getElementById('f-file');
+  const file = fileInput?.files?.[0] || null;
+
   if (!type || !title || !desc) { toast('⚠ Please fill all required fields'); return; }
+  if (!approver) { toast('⚠ Please select an approver'); return; }
+
+  // Get approver name for display
+  const approverSel = document.getElementById('f-approver');
+  const approverName = approverSel.options[approverSel.selectedIndex]?.text || '';
+
+  // Convert file to base64 if present
+  let fileData = null, fileName = null, fileType = null;
+  if (file) {
+    fileData = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.readAsDataURL(file);
+    });
+    fileName = file.name;
+    fileType = file.type;
+  }
 
   const { ok, data } = await apiFetch('/api/submissions', {
     method: 'POST',
-    body: JSON.stringify({ type, title, description: desc, saving: parseInt(saving)||0 })
+    body: JSON.stringify({
+      type, title, description: desc,
+      saving: parseInt(saving) || 0,
+      approver_id: approver,
+      approver_name: approverName,
+      file_name: fileName,
+      file_data: fileData,
+      file_type: fileType
+    })
   });
   if (!ok) { toast('Error: ' + (data.error || 'Failed')); return; }
 
   document.getElementById('f-type').selectedIndex = 0;
   ['f-title','f-desc','f-saving'].forEach(id => document.getElementById(id).value = '');
-  toast('✓ Idea submitted successfully!');
+  document.getElementById('f-approver').selectedIndex = 0;
+  document.getElementById('susa-dashboard').style.display = 'none';
+  clearFile();
+  toast('✓ Idea submitted to ' + approverName.split(' (')[0] + '!');
 }
 
 // ─── MY IDEAS ────────────────────────────────────────────────
@@ -481,6 +644,7 @@ async function renderMyIdeas() {
       <h4>${esc(s.title)}</h4>
       <div class="sub-meta">${esc(s.type)} · ${esc(s.unit)} · ${fmtDate(s.created_at)}</div>
       ${currentUser.role !== 'operator' ? `<div class="sub-meta" style="color:var(--navy);font-weight:600">${esc(s.full_name)} (${esc(s.emp_id)})</div>` : ''}
+      ${s.approver_name ? `<div class="sub-meta">📨 Sent to: <span class="approver-badge">${esc(s.approver_name)}</span></div>` : ''}
       <div class="sub-excerpt">${esc(s.description).substring(0,120)}${s.description.length>120?'...':''}</div>
       <div class="sub-footer">
         <span class="badge badge-${s.status.toLowerCase()}">${s.status}</span>
@@ -507,8 +671,10 @@ async function renderReview() {
       <h4>${esc(s.title)}</h4>
       <div class="sub-meta"><b>${esc(s.full_name)}</b> (${esc(s.emp_id)}) · ${esc(s.unit)}</div>
       <div class="sub-meta">${esc(s.type)} · ${fmtDate(s.created_at)}</div>
+      ${s.approver_name ? `<div class="sub-meta">📨 Assigned to: <span class="approver-badge">${esc(s.approver_name)}</span></div>` : ''}
       <div class="sub-excerpt">${esc(s.description)}</div>
       ${s.saving ? `<div class="saving-chip" style="margin-bottom:8px">💰 Est. saving: ₹${Number(s.saving).toLocaleString('en-IN')}/month</div>` : ''}
+      ${s.file_name ? `<div style="font-size:12px;color:var(--sky);margin-bottom:8px">📎 Attachment: ${esc(s.file_name)}</div>` : ''}
       <textarea class="feedback-box" id="fb-${s.id}" placeholder="Optional feedback to operator..." rows="2"></textarea>
       <div class="action-row">
         <button class="btn-approve" onclick="reviewAction(${s.id},'Approved')">✓ Approve</button>

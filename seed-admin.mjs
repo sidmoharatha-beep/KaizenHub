@@ -63,7 +63,7 @@ writeFileSync(tmpFile, sql);
 
 console.log('Creating admin user...');
 try {
-  execSync(`wrangler d1 execute kaizenhub-db --file=${tmpFile}`, { stdio: 'inherit' });
+  execSync(`wrangler d1 execute kaizenhub-db --remote --file=${tmpFile}`, { stdio: 'inherit' });
   console.log('\n✅ Admin created!');
   console.log(`   Email   : ${ADMIN.email}`);
   console.log(`   Password: ${ADMIN.password}`);

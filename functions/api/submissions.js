@@ -54,24 +54,30 @@ export async function onRequestPost({ request, env }) {
   let body;
   try { body = await request.json(); } catch { return err('Invalid JSON'); }
 
-  const { type, title, description, saving } = body;
+  const { type, title, description, saving, approver_id, approver_name, file_name, file_data, file_type } = body;
   if (!type || !title || !description) return err('type, title, and description are required');
+  if (!approver_id) return err('approver_id is required');
 
   const { meta } = await env.DB.prepare(
-    `INSERT INTO submissions(user_id, emp_id, full_name, unit, type, title, description, saving)
-     VALUES(?,?,?,?,?,?,?,?)`
+    `INSERT INTO submissions(user_id, emp_id, full_name, unit, type, title, description, saving, approver_id, approver_name, file_name, file_data, file_type)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(
     session.uid,
     session.emp_id,
     session.full_name,
     session.unit || '—',
     type, title, description,
-    parseInt(saving) || 0
+    parseInt(saving) || 0,
+    approver_id || null,
+    approver_name || null,
+    file_name || null,
+    file_data || null,
+    file_type || null
   ).run();
 
   const ip = request.headers.get('CF-Connecting-IP') || '';
   await auditLog(env, session, 'SUBMIT_IDEA', 'submission', String(meta?.last_row_id || ''),
-    { type, title }, ip);
+    { type, title, approver_name }, ip);
 
   return json({ ok: true, message: 'Idea submitted successfully!' });
 }
