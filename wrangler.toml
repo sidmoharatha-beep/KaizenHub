@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "kaizenhub-db"
-database_id   = "YOUR_D1_DATABASE_ID"   # ← replace after: wrangler d1 create kaizenhub-db
+database_id   = "6fb53013-7c35-4f41-997b-6fadfdfc4d9b"   # ← replace after: wrangler d1 create kaizenhub-db
