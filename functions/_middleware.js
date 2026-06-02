@@ -39,18 +39,18 @@ export async function onRequest(context) {
   
   // 4. RBAC rules for enterprise modules
   const rbac = {
-    '/api/safety/submit': ['Operator'],
-    '/api/safety/review': ['Manager','Admin'],
-    '/api/quality/submit': ['Operator'],
-    '/api/quality/review': ['Manager','Admin'],
-    '/api/kaizen/submit': ['Operator'],
-    '/api/kaizen/evaluate': ['Manager','QC Panel Member','Admin'],
-    '/api/qc/submit': ['Operator'],
-    '/api/qc/review': ['QC Panel Member','Admin'],
-    '/api/behavioral': ['SIC','Manager'],
-    '/api/behavioral/approve': ['HR','Admin'],
-    '/api/admin': ['Admin'],
-    '/api/hr': ['HR','Admin']
+    '/api/safety/submit': ['Operator','admin','Admin','admin'],
+    '/api/safety/review': ['Manager','manager','Admin','admin'],
+    '/api/quality/submit': ['Operator','admin','Admin','admin'],
+    '/api/quality/review': ['Manager','manager','Admin','admin'],
+    '/api/kaizen/submit': ['Operator','admin','Admin','admin'],
+    '/api/kaizen/evaluate': ['Manager','manager','QC Panel Member','Admin','admin'],
+    '/api/qc/submit': ['Operator','admin','Admin','admin'],
+    '/api/qc/review': ['QC Panel Member','Admin','admin'],
+    '/api/behavioral': ['SIC','Manager','manager'],
+    '/api/behavioral/approve': ['HR','Admin','admin'],
+    '/api/admin': ['Admin','admin'],
+    '/api/hr': ['HR','Admin','admin']
   };
   
   for (const [path, roles] of Object.entries(rbac)) {
