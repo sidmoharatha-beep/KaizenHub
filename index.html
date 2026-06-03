@@ -580,80 +580,102 @@ async function loadManagers() {
 
 // ─── SUBMIT ──────────────────────────────────────────────────
 async function submitIdea() {
-  const type     = document.getElementById('f-type').value;
-  const title    = document.getElementById('f-title').value.trim();
-  const desc     = document.getElementById('f-desc').value.trim();
-  const saving   = document.getElementById('f-saving').value;
-  const approver = document.getElementById('f-approver').value;
-  const fileInput = document.getElementById('f-file');
-  const file = fileInput?.files?.[0] || null;
+  const type = document.getElementById("f-type").value;
+  const title = document.getElementById("f-title").value.trim();
+  const desc = document.getElementById("f-desc").value.trim();
+  const saving = document.getElementById("f-saving").value;
+  const approver = document.getElementById("f-approver").value;
 
-  if (!type || !title || !desc) { toast('⚠ Please fill all required fields'); return; }
-  if (!approver) { toast('⚠ Please select an approver'); return; }
+  if (!type ||!title ||!desc) { toast("⚠ Please fill all required fields"); return; }
+  if (!approver) { toast("⚠ Please select an approver"); return; }
 
-  // Get approver name for display
-  const approverSel = document.getElementById('f-approver');
-  const approverName = approverSel.options[approverSel.selectedIndex]?.text || '';
+  const typeMap = {
+    "Kaizen (Process Improvement)": "kaizen",
+    "QC Project": "quality",
+    "SUSA Hazard": "safety",
+    "Safety / Hazard": "safety",
+    "Cost Saving": "kaizen"
+  };
+  const apiType = typeMap[type];
+  if (!apiType) { toast("⚠ Invalid type"); return; }
 
-  // Convert file to base64 if present
-  let fileData = null, fileName = null, fileType = null;
-  if (file) {
-    fileData = await new Promise(res => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.readAsDataURL(file);
-    });
-    fileName = file.name;
-    fileType = file.type;
+  let payload = {};
+  if (apiType === "kaizen") {
+    payload = {
+      title,
+      current_state: "See description",
+      proposed_state: desc,
+      expected_benefit: saving? `Save ₹${saving}/month` : ""
+    };
+  } else if (apiType === "safety") {
+    payload = {
+      hazard_description: title,
+      location: "See description",
+      risk_level: "Medium",
+      suggested_action: desc
+    };
+  } else if (apiType === "quality") {
+    payload = {
+      defect_description: title,
+      part_number: "",
+      quantity: 1,
+      root_cause: "See description",
+      corrective_action: desc
+    };
   }
 
-  const { ok, data } = await apiFetch('/api/submissions', {
-    method: 'POST',
-    body: JSON.stringify({
-      type, title, description: desc,
-      saving: parseInt(saving) || 0,
-      approver_id: approver,
-      approver_name: approverName,
-      file_name: fileName,
-      file_data: fileData,
-      file_type: fileType
-    })
+  const { ok, data } = await apiFetch(`/api/submissions/${apiType}`, {
+    method: "POST",
+    body: JSON.stringify(payload)
   });
-  if (!ok) { toast('Error: ' + (data.error || 'Failed')); return; }
 
-  document.getElementById('f-type').selectedIndex = 0;
-  ['f-title','f-desc','f-saving'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-approver').selectedIndex = 0;
-  document.getElementById('susa-dashboard').style.display = 'none';
+  if (!ok) { toast("Error: " + (data.error || "Failed")); return; }
+
+  document.getElementById("f-type").selectedIndex = 0;
+  ["f-title","f-desc","f-saving"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f-approver").selectedIndex = 0;
+  document.getElementById("susa-dashboard").style.display = "none";
   clearFile();
-  toast('✓ Idea submitted to ' + approverName.split(' (')[0] + '!');
+  toast("✓ Idea submitted successfully!");
+  goTo("myideas");
 }
 
 // ─── MY IDEAS ────────────────────────────────────────────────
 async function renderMyIdeas() {
-  const el = document.getElementById('my-list');
-  el.innerHTML = '<div class="loading">Loading...</div>';
+  const el = document.getElementById("my-list");
+  el.innerHTML = "<div class=\"loading\">Loading...</div>";
 
-  const { ok, data } = await apiFetch('/api/submissions');
-  if (!ok) { el.innerHTML = '<div class="empty">Error loading submissions.</div>'; return; }
-  const subs = data.submissions || [];
-  if (!subs.length) { el.innerHTML = '<div class="empty">No submissions yet.<br>Go submit your first idea!</div>'; return; }
+  const [kaizen, safety, quality] = await Promise.all([
+    apiFetch("/api/submissions/kaizen"),
+    apiFetch("/api/submissions/safety"),
+    apiFetch("/api/submissions/quality")
+  ]);
+
+  let subs = [];
+  if (kaizen.ok) subs = subs.concat(kaizen.data.submissions.map(s => ({...s, type: "Kaizen"})));
+  if (safety.ok) subs = subs.concat(safety.data.submissions.map(s => ({...s, type: "Safety", title: s.hazard_description, description: s.suggested_action})));
+  if (quality.ok) subs = subs.concat(quality.data.submissions.map(s => ({...s, type: "Quality", title: s.defect_description, description: s.corrective_action})));
+
+  subs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (!subs.length) {
+    el.innerHTML = "<div class=\"empty\">No submissions yet.<br>Go submit your first idea!</div>";
+    return;
+  }
 
   el.innerHTML = subs.map(s => `
-    <div class="sub-card ${s.status.toLowerCase()}">
+    <div class=\"sub-card ${s.status.toLowerCase().replace(/ /g, "-")}\">
       <h4>${esc(s.title)}</h4>
-      <div class="sub-meta">${esc(s.type)} · ${esc(s.unit)} · ${fmtDate(s.created_at)}</div>
-      ${currentUser.role !== 'operator' ? `<div class="sub-meta" style="color:var(--navy);font-weight:600">${esc(s.full_name)} (${esc(s.emp_id)})</div>` : ''}
-      ${s.approver_name ? `<div class="sub-meta">📨 Sent to: <span class="approver-badge">${esc(s.approver_name)}</span></div>` : ''}
-      <div class="sub-excerpt">${esc(s.description).substring(0,120)}${s.description.length>120?'...':''}</div>
-      <div class="sub-footer">
-        <span class="badge badge-${s.status.toLowerCase()}">${s.status}</span>
-        ${s.saving ? `<span class="saving-chip">💰 ₹${Number(s.saving).toLocaleString('en-IN')}/mo saved</span>` : ''}
-        ${s.points ? `<span style="font-size:11px;font-weight:700;color:var(--green)">+${s.points} pts</span>` : ''}
+      <div class=\"sub-meta\">${esc(s.type)} · ${fmtDate(s.created_at)}</div>
+      ${currentUser.role!== "operator"? `<div class=\"sub-meta\" style=\"color:var(--navy);font-weight:600\">${esc(s.full_name)} (${esc(s.emp_id)})</div>` : ""}
+      <div class=\"sub-excerpt\">${esc(s.description || s.proposed_state || s.expected_benefit || "").substring(0,120)}</div>
+      <div class=\"sub-footer\">
+        <span class=\"badge badge-${s.status.toLowerCase().replace(/ /g, "-")}\">${s.status}</span>
+        ${s.expected_benefit? `<span class=\"saving-chip\">${esc(s.expected_benefit)}</span>` : ""}
       </div>
-      ${s.feedback ? `<div class="feedback-text">Feedback: ${esc(s.feedback)}</div>` : ''}
+      ${s.feedback? `<div class=\"feedback-text\">Feedback: ${esc(s.feedback)}</div>` : ""}
     </div>
-  `).join('');
+  `).join("");
 }
 
 // ─── REVIEW (manager/admin) ───────────────────────────────────
