@@ -6,7 +6,7 @@ if (url.pathname.startsWith('/api/submissions/') && url.pathname.endsWith('/revi
   const id = parts[4];
   const { status, feedback } = await request.json();
   const user = await getUser(request, env);
-  if (!user || user.role!== 'admin') return json({error: 'Unauthorized'}, 403);
+  console.log("User:", user); if (!user || user.role !== 'admin') return json({error: 'Unauthorized'}, 403);
 
   const table = type === 'kaizen'? 'kaizen_submissions' : type === 'safety'? 'safety_submissions' : 'quality_submissions';
 

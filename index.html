@@ -926,9 +926,6 @@ async function reviewAction(apiType, id, status) {
 }
 </script>
 <script id="final-review-fix">
-async function renderReview() {
-  const el = document.getElementById("review-list");
-  el.innerHTML = '<div class="loading">Loading...</div>';
   try {
     const [kaizen, safety, quality] = await Promise.all([
       apiFetch("/api/submissions/kaizen"),
