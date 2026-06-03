@@ -1,5 +1,5 @@
 export async function onRequestPost({ request, env, data }) {
-  const user = data.user; // set by _middleware.js
+  const user = data.user;
   if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
   let body;
@@ -30,46 +30,24 @@ export async function onRequestPost({ request, env, data }) {
   }
 }
 
-export async function onRequestGet({ request, env, data }) {
+// GET list only - single item handled by [type]/[id].js
+export async function onRequestGet({ env, data }) {
   const user = data.user;
   if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
-  const url = new URL(request.url);
-  const id = url.pathname.split('/').pop();
-
   try {
-    // GET /api/submissions/kaizen/:id
-    if (id && id!== 'kaizen') {
-      const role = user.role.toLowerCase();
-      const isAdmin = ['admin', 'manager'].includes(role);
-
-      const query = isAdmin
-       ? `SELECT k.*, u.full_name, u.emp_id FROM kaizen_submissions k
-           JOIN users u ON k.user_id = u.id WHERE k.id =?`
-        : `SELECT * FROM kaizen_submissions WHERE id =? AND user_id =?`;
-
-      const params = isAdmin? [id] : [id, user.id];
-      const { results } = await env.DB.prepare(query).bind(...params).all();
-
-      if (!results.length) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
-      return new Response(JSON.stringify(results[0]), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // GET /api/submissions/kaizen - list all
     const role = user.role.toLowerCase();
     const isAdmin = ['admin', 'manager'].includes(role);
 
     const query = isAdmin
-     ? `SELECT k.*, u.full_name, u.emp_id FROM kaizen_submissions k
+    ? `SELECT k.*, u.full_name, u.emp_id FROM kaizen_submissions k
          JOIN users u ON k.user_id = u.id
          ORDER BY k.created_at DESC LIMIT 100`
       : `SELECT * FROM kaizen_submissions WHERE user_id =?
          ORDER BY created_at DESC LIMIT 100`;
 
     const stmt = isAdmin
-     ? env.DB.prepare(query)
+    ? env.DB.prepare(query)
       : env.DB.prepare(query).bind(user.id);
 
     const { results } = await stmt.all();
