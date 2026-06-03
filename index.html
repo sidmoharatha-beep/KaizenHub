@@ -680,44 +680,59 @@ async function renderMyIdeas() {
 
 // ─── REVIEW (manager/admin) ───────────────────────────────────
 async function renderReview() {
-  const el = document.getElementById('review-list');
-  el.innerHTML = '<div class="loading">Loading...</div>';
+  const el = document.getElementById("review-list");
+  el.innerHTML = "<div class=\"loading\">Loading...</div>";
 
-  const { ok, data } = await apiFetch('/api/submissions?status=Pending');
-  if (!ok) { el.innerHTML = '<div class="empty">Error loading queue.</div>'; return; }
-  const subs = data.submissions || [];
-  if (!subs.length) { el.innerHTML = '<div class="empty">✓ All clear!<br>No pending submissions.</div>'; return; }
+  // Fetch all 3 types and filter for Pending
+  const [kaizen, safety, quality] = await Promise.all([
+    apiFetch("/api/submissions/kaizen"),
+    apiFetch("/api/submissions/safety"),
+    apiFetch("/api/submissions/quality")
+  ]);
+
+  let subs = [];
+  if (kaizen.ok) subs = subs.concat(kaizen.data.submissions.map(s => ({...s, apiType: "kaizen", displayType: "Kaizen", title: s.title, desc: s.proposed_state || s.current_state})));
+  if (safety.ok) subs = subs.concat(safety.data.submissions.map(s => ({...s, apiType: "safety", displayType: "Safety", title: s.hazard_description, desc: s.suggested_action})));
+  if (quality.ok) subs = subs.concat(quality.data.submissions.map(s => ({...s, apiType: "quality", displayType: "Quality", title: s.defect_description, desc: s.corrective_action})));
+
+  // Only show Pending status
+  subs = subs.filter(s => s.status === "Pending" || s.status === "Submitted");
+  subs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (!subs.length) {
+    el.innerHTML = "<div class=\"empty\">✓ All clear!<br>No pending submissions.</div>";
+    return;
+  }
 
   el.innerHTML = subs.map(s => `
-    <div class="sub-card" id="sub-${s.id}">
+    <div class=\"sub-card\" id=\"sub-${s.apiType}-${s.id}\">
       <h4>${esc(s.title)}</h4>
-      <div class="sub-meta"><b>${esc(s.full_name)}</b> (${esc(s.emp_id)}) · ${esc(s.unit)}</div>
-      <div class="sub-meta">${esc(s.type)} · ${fmtDate(s.created_at)}</div>
-      ${s.approver_name ? `<div class="sub-meta">📨 Assigned to: <span class="approver-badge">${esc(s.approver_name)}</span></div>` : ''}
-      <div class="sub-excerpt">${esc(s.description)}</div>
-      ${s.saving ? `<div class="saving-chip" style="margin-bottom:8px">💰 Est. saving: ₹${Number(s.saving).toLocaleString('en-IN')}/month</div>` : ''}
-      ${s.file_name ? `<div style="font-size:12px;color:var(--sky);margin-bottom:8px">📎 Attachment: ${esc(s.file_name)}</div>` : ''}
-      <textarea class="feedback-box" id="fb-${s.id}" placeholder="Optional feedback to operator..." rows="2"></textarea>
-      <div class="action-row">
-        <button class="btn-approve" onclick="reviewAction(${s.id},'Approved')">✓ Approve</button>
-        <button class="btn-reject"  onclick="reviewAction(${s.id},'Rejected')">✗ Return</button>
+      <div class=\"sub-meta\"><b>${esc(s.full_name)}</b> (${esc(s.emp_id)}) · ${esc(s.unit || "N/A")}</div>
+      <div class=\"sub-meta\">${esc(s.displayType)} · ${fmtDate(s.created_at)}</div>
+      <div class=\"sub-excerpt\">${esc(s.desc || "").substring(0,150)}</div>
+      ${s.expected_benefit? `<div class=\"saving-chip\" style=\"margin-bottom:8px\">${esc(s.expected_benefit)}</div>` : ""}
+      <textarea class=\"feedback-box\" id=\"fb-${s.apiType}-${s.id}\" placeholder=\"Optional feedback to operator...\" rows=\"2\"></textarea>
+      <div class=\"action-row\">
+        <button class=\"btn-approve\" onclick=\"reviewAction(\"${s.apiType}\", ${s.id}, \"Approved\")\">✓ Approve</button>
+        <button class=\"btn-reject\"  onclick=\"reviewAction(\"${s.apiType}\", ${s.id}, \"Rejected\")\">✗ Return</button>
       </div>
     </div>
-  `).join('');
+  `).join("");
 }
 
-async function reviewAction(id, status) {
-  const feedback = document.getElementById('fb-' + id)?.value.trim() || '';
+async function reviewAction(apiType, id, status) {
+  const feedback = document.getElementById(`fb-${apiType}-${id}`)?.value.trim() || "";
 
-  const { ok, data } = await apiFetch('/api/submissions', {
-    method: 'PUT',
-    body: JSON.stringify({ id, status, feedback })
+  const { ok, data } = await apiFetch(`/api/submissions/${apiType}/${id}/review`, {
+    method: "POST",
+    body: JSON.stringify({ status, feedback })
   });
-  if (!ok) { toast('Error: ' + (data.error || 'Failed')); return; }
 
-  toast(status === 'Approved'
-    ? `✓ Approved! ${data.points} points awarded`
-    : '↩ Returned to submitter');
+  if (!ok) { toast("Error: " + (data.error || "Failed")); return; }
+
+  toast(status === "Approved"
+   ? `✓ Approved!`
+    : "↩ Returned to submitter");
   renderReview();
 }
 
