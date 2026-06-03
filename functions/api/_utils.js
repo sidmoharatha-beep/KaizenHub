@@ -1,6 +1,4 @@
 // ── shared/utils.js ──────────────────────────────────────────
-// Utilities used across all Pages Functions
-
 export function uuid() {
   return crypto.randomUUID();
 }
@@ -22,7 +20,6 @@ export function err(msg, status = 400) {
 }
 
 export async function hashPassword(password) {
-  // PBKDF2 via Web Crypto (available in Workers)
   const enc = new TextEncoder();
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const keyMaterial = await crypto.subtle.importKey(
@@ -59,7 +56,7 @@ export async function getSession(request, env) {
   if (!token) return null;
 
   const session = await env.DB.prepare(
-    `SELECT s.*, u.id as uid, u.emp_id, u.full_name, u.role, u.unit, u.email
+    `SELECT s.*, u.id as uid, u.emp_id, u.full_name, u.role_id, u.unit, u.email
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token = ? AND s.expires_at > datetime('now')`
   ).bind(token).first();
