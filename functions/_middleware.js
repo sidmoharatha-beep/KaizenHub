@@ -43,7 +43,7 @@ export async function onRequest(context) {
   };
   
   for (const [path, roles] of Object.entries(rbac)) {
-    if (url.pathname.startsWith(path) &&!roles.includes(data.user.role)) {
+    if (url.pathname.startsWith(path) &&!roles.includes(data.user.role.toLowerCase())) {
       return jsonErr(`Forbidden: Requires role ${roles.join(' or ')}`, 403);
     }
   }
