@@ -954,3 +954,42 @@ if (authToken && currentUser) {
 </script>
 </body>
 </html>
+<script id="single-review-fix">
+async function renderReview() {
+  const el = document.getElementById("review-list");
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const [kaizen, safety, quality] = await Promise.all([
+      apiFetch("/api/submissions/kaizen"),
+      apiFetch("/api/submissions/safety"),
+      apiFetch("/api/submissions/quality")
+    ]);
+    let subs = [];
+    if (kaizen.ok) subs = subs.concat(kaizen.data.submissions.map(s => ({...s, apiType: "kaizen", displayType: "Kaizen", title: s.title, desc: s.proposed_state || s.current_state})));
+    if (safety.ok) subs = subs.concat(safety.data.submissions.map(s => ({...s, apiType: "safety", displayType: "Safety", title: s.hazard_description, desc: s.suggested_action})));
+    if (quality.ok) subs = subs.concat(quality.data.submissions.map(s => ({...s, apiType: "quality", displayType: "Quality", title: s.defect_description, desc: s.corrective_action})));
+    subs = subs.filter(s => s.status === "Pending" || s.status === "Submitted");
+    subs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    if (!subs.length) { el.innerHTML = '<div class="empty">✓ All clear!</div>'; return; }
+    el.innerHTML = subs.map(s => {
+      return '<div class="sub-card">' +
+        '<h4>' + esc(s.title) + '</h4>' +
+        '<div class="sub-meta"><b>' + esc(s.full_name) + '</b> (' + esc(s.emp_id) + ')</div>' +
+        '<textarea id="fb-' + s.apiType + '-' + s.id + '" placeholder="Optional feedback..." rows="2"></textarea>' +
+        '<div class="action-row">' +
+          '<button onclick="reviewAction(\'' + s.apiType + '\', ' + s.id + ', \'Approved\')">✓ Approve</button>' +
+          '<button onclick="reviewAction(\'' + s.apiType + '\', ' + s.id + ', \'Rejected\')">✗ Return</button>' +
+        '</div></div>';
+    }).join("");
+  } catch(e) { console.error(e); }
+}
+async function reviewAction(apiType, id, status) {
+  const feedback = document.getElementById('fb-' + apiType + '-' + id).value.trim() || "";
+  const res = await apiFetch('/api/submissions/' + apiType + '/' + id + '/review', {
+    method: "POST", body: JSON.stringify({ status, feedback })
+  });
+  if (!res.ok) { toast("DB Error: " + (res.data.error || "Check console")); console.error(res.data); return; }
+  toast(status === "Approved" ? "✓ Approved!" : "↩ Returned");
+  renderReview();
+}
+</script>
