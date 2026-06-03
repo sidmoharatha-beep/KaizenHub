@@ -33,13 +33,13 @@ export async function onRequest(context) {
   };
   
   const rbac = {
-    '/api/safety/submit': ['Operator','Admin','admin'],
-    '/api/safety/review': ['Manager','Admin','admin'],
-    '/api/quality/submit': ['Operator','Admin','admin'],
-    '/api/quality/review': ['Manager','Admin','admin'],
-    '/api/kaizen/submit': ['Operator','Admin','admin'],
-    '/api/kaizen/evaluate': ['Manager','QC Panel Member','Admin','admin'],
-    '/api/admin': ['Admin','admin']
+    '/api/safety/submit': ['operator','admin'],
+    '/api/safety/review': ['manager','admin'],
+    '/api/quality/submit': ['operator','admin'],
+    '/api/quality/review': ['manager','admin'],
+    '/api/kaizen/submit': ['operator','admin'],
+    '/api/kaizen/evaluate': ['manager','qc panel member','admin'],
+    '/api/admin': ['admin']
   };
   
   for (const [path, roles] of Object.entries(rbac)) {
