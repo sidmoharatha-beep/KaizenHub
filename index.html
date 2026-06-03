@@ -489,7 +489,7 @@ function loadApp() {
 
   const pillEl = document.getElementById('role-pill');
   pillEl.textContent = currentUser.role;
-  pillEl.className = `role-pill role-${currentUser.role}`;
+  pillEl.className = `role-pill role-${currentUser.role.toLowerCase()}`;
 
   buildNav(currentUser.role);
   goTo(currentUser.role === 'operator' ? 'submit' : 'review');
