@@ -3,7 +3,7 @@ import { uploadAttachment } from '../../lib/upload.js';
 import { notify } from '../../lib/notifications.js';
 
 // POST /api/kaizen/implement — Upload implementation evidence
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   const contentType = request.headers.get('content-type') || '';
