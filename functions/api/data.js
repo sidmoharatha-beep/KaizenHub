@@ -1,6 +1,6 @@
 import { json, getSession } from './_utils.js';
 
-export async function onRequestGet({ request, env }) {
+export const onRequestGet = async ({ request, env }) => {
   const session = await getSession(request, env);
   if (!session) return json({ error: 'Unauthorized' }, 401);
 

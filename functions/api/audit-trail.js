@@ -1,6 +1,6 @@
 import { json, err, getSession } from './_utils.js';
 
-export async function onRequestGet({ request, env }) {
+export const onRequestGet = async ({ request, env }) => {
   const session = await getSession(request, env);
   if (!session || session.role !== 'Admin') return err('Admin access required', 403);
 
@@ -15,4 +15,4 @@ export async function onRequestGet({ request, env }) {
 
   const count = await env.DB.prepare('SELECT COUNT(*) as total FROM audit_log').first();
   return json({ logs: results, total: count?.total || 0, limit, offset });
-}
+};

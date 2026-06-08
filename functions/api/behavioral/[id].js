@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/behavioral/[id] — Get single evaluation details
-export async function onRequestGet({ params, env, data }) {
+export const onRequestGet = async ({ params, env, data }) => {
   const user = data.user;
   const id = parseInt(params.id);
   if (!id) return err('Invalid evaluation ID', 400);

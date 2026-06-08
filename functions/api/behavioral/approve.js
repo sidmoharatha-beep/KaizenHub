@@ -4,7 +4,7 @@ import { notify } from '../../lib/notifications.js';
 import { Scoring } from '../../lib/scoring.js';
 
 // POST /api/behavioral/approve — HR approves/rejects behavioral evaluation
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   let body;
