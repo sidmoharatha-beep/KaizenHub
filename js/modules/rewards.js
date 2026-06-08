@@ -13,7 +13,7 @@ export const renderRewards = async () => {
   el.innerHTML = `
     <div class="page-header"><h1>My Wallet</h1></div>
     <div class="reward-hero">
-      <div class="emp-name">${esc((window.currentUser?.name) || 'Employee')}</div>
+      <div class="emp-name">${esc(currentUser?.name || currentUser?.full_name || 'Employee')}</div>
       <div class="pts-big">${total_points || 0}</div>
       <div class="pts-label">Total Points Earned</div>
     </div>

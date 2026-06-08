@@ -71,25 +71,29 @@ export const renderQualitySubmit = async (container) => {
     const fd = new FormData(e.target);
     const body = Object.fromEntries(fd.entries());
 
-    let res;
+    let result;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      res = await fetch('/api/quality/submit', {
+      const rawRes = await fetch('/api/quality/submit', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
+      result = await rawRes.json().catch(() => ({}));
+      if (!rawRes.ok) {
+        toast('Error: ' + (result?.error || 'Failed to submit'));
+        return;
+      }
     } else {
-      res = await apiFetch('/api/quality/submit', {
+      const res = await apiFetch('/api/quality/submit', {
         method: 'POST',
         body: JSON.stringify(body)
       });
-    }
-
-    const result = res.ok ? await res.json() : null;
-    if (!res.ok) {
-      toast('Error: ' + (result?.error || 'Failed to submit'));
-      return;
+      result = res.data;
+      if (!res.ok) {
+        toast('Error: ' + (result?.error || 'Failed to submit'));
+        return;
+      }
     }
 
     toast('Quality report submitted! Score: ' + result.quality_score);

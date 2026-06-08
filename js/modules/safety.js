@@ -166,8 +166,8 @@ async function renderSafetyForm(container) {
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
-      const result = await res.json();
-      if (!res.ok) { toast('Error: ' + (result.error || 'Failed')); return; }
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
       toast('Safety report submitted! Risk Score: ' + result.risk_score);
     } else {
       const res = await apiFetch('/api/safety/submit', { method: 'POST', body: JSON.stringify(data) });
@@ -365,21 +365,22 @@ async function renderQCForm(container) {
     body.submit = true;
     if (body.team_members.length < 3) { toast('Please add at least 3 team members'); return; }
 
-    let res;
+    let qcResult;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      res = await fetch('/api/qc/submit', {
+      const rawRes = await fetch('/api/qc/submit', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
+      qcResult = await rawRes.json().catch(() => ({}));
+      if (!rawRes.ok) { toast('Error: ' + (qcResult?.error || 'Failed')); return; }
     } else {
-      res = await apiFetch('/api/qc/submit', { method: 'POST', body: JSON.stringify(body) });
+      const res = await apiFetch('/api/qc/submit', { method: 'POST', body: JSON.stringify(body) });
+      qcResult = res.data;
+      if (!res.ok) { toast('Error: ' + (qcResult?.error || 'Failed')); return; }
     }
-
-    const result = res.ok ? await res.json() : null;
-    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
-    toast(result.message);
+    toast(qcResult?.message || 'Quality Circle Project submitted!');
     e.target.reset();
     teamMembers = [];
     photoFile = null;
@@ -468,20 +469,21 @@ async function renderBehavioralForm(container) {
       if (body[k] !== undefined) body[k] = parseInt(body[k]);
     });
 
-    let res;
+    let behResult;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      res = await fetch('/api/behavioral/evaluate', {
+      const rawRes = await fetch('/api/behavioral/evaluate', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
+      behResult = await rawRes.json().catch(() => ({}));
+      if (!rawRes.ok) { toast('Error: ' + (behResult?.error || 'Failed')); return; }
     } else {
-      res = await apiFetch('/api/behavioral/evaluate', { method: 'POST', body: JSON.stringify(body) });
+      const res = await apiFetch('/api/behavioral/evaluate', { method: 'POST', body: JSON.stringify(body) });
+      behResult = res.data;
+      if (!res.ok) { toast('Error: ' + (behResult?.error || 'Failed')); return; }
     }
-
-    const result = res.ok ? await res.json() : null;
-    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast('Behavioral evaluation submitted!');
     e.target.reset();
     photoFile = null;

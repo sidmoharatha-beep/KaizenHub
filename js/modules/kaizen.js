@@ -1,4 +1,4 @@
-import { apiFetch, esc, statusBadge, fmtDate, toast, initAttachmentUpload, buildMultipartForm } from '../app.js';
+import { apiFetch, esc, statusBadge, fmtDate, toast, initAttachmentUpload, buildMultipartForm, currentUser } from '../app.js';
 
 const ICONS = {
   kaizen: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
@@ -9,7 +9,7 @@ async function getApprovedKaizenForUser() {
   try {
     const res = await apiFetch('/api/kaizen/submit?status=Approved');
     if (res.ok && res.data?.submissions?.length > 0) {
-      const myApproved = res.data.submissions.filter(k => k.user_id === res.data.currentUserId);
+      const myApproved = res.data.submissions.filter(k => k.user_id === currentUser?.id);
       return myApproved.length > 0 ? myApproved[0] : null;
     }
   } catch {}
@@ -93,9 +93,8 @@ function renderNewKaizenForm(container, managerOptions) {
     body.approver_id = parseInt(body.approver_id);
 
     const res = await apiFetch('/api/kaizen/submit', { method: 'POST', body: JSON.stringify(body) });
-    const result = res.ok ? await res.json() : null;
-    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
-    toast(result.message);
+    if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
+    toast(res.data?.message || 'Kaizen idea submitted!');
     e.target.reset();
     // Re-render to check for approved kaizen
     renderKaizenSubmit(container);
@@ -196,9 +195,9 @@ function renderImplementationForm(container, kaizen, coImplOptions, evalOptions)
       body: formData
     });
 
-    const result = res.ok ? await res.json() : null;
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
-    toast(result.message);
+    toast(result?.message || 'Implementation submitted for evaluation!');
     photoFile = null;
     const preview = container.querySelector('#kaizen-photo-preview');
     const removeBtn = container.querySelector('#kaizen-photo-remove');
