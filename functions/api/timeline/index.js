@@ -2,7 +2,7 @@ import { json } from '../_utils.js';
 import { getActiveWindows } from '../../lib/timeline.js';
 
 // GET /api/timeline — Get active submission windows
-export async function onRequestGet({ env, data }) {
+export const onRequestGet = async ({ env, data }) => {
   const windows = getActiveWindows();
 
   // Also get rules from DB for any custom overrides
@@ -15,4 +15,4 @@ export async function onRequestGet({ env, data }) {
     rules,
     server_time: new Date().toISOString()
   });
-}
+};

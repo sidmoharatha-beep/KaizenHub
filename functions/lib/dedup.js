@@ -1,4 +1,4 @@
-export async function computeHash(text) {
+export const computeHash = async (text) => {
   const normalized = text.toLowerCase().trim().replace(/\s+/g, ' ');
   const encoder = new TextEncoder();
   const data = encoder.encode(normalized);
@@ -6,14 +6,14 @@ export async function computeHash(text) {
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function isDuplicate(env, table, hash, userId) {
+export const isDuplicate = async (env, table, hash, userId) => {
   const existing = await env.DB.prepare(
     `SELECT id FROM ${table} WHERE content_hash = ? AND user_id = ? AND created_at > datetime('now', '-30 days')`
   ).bind(hash, userId).first();
   return !!existing;
 }
 
-export async function checkMonthlyCap(env, table, userId, maxPerMonth = 5) {
+export const checkMonthlyCap = async (env, table, userId, maxPerMonth = 5) => {
   const result = await env.DB.prepare(
     `SELECT COUNT(*) as count FROM ${table}
      WHERE user_id = ? AND status = 'Approved'

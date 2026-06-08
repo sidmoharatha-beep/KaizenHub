@@ -23,7 +23,7 @@ async function resolveRoleId(env, roleName) {
 }
 
 // Helper: resolve role name from role_id
-function roleNameById(id) {
+const roleNameById = (id) => {
   const map = { 1: 'Operator', 2: 'SIC', 3: 'Manager', 4: 'HR', 5: 'QC Panel Member', 6: 'Admin' };
   return map[id] || 'Unknown';
 }

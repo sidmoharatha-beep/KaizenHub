@@ -1,6 +1,6 @@
 import { json, err, getSession, auditLog } from './_utils.js';
 
-export async function onRequestOptions() {
+export const onRequestOptions = async () => {
   return new Response(null, {
     headers: {
       'Access-Control-Allow-Origin': '*',
@@ -11,7 +11,7 @@ export async function onRequestOptions() {
 }
 
 // GET /api/submissions — fetch submissions based on role
-export async function onRequestGet({ request, env }) {
+export const onRequestGet = async ({ request, env }) => {
   const session = await getSession(request, env);
   if (!session) return err('Unauthorized', 401);
 
