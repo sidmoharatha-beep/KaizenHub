@@ -3,7 +3,7 @@ import { deleteAttachment } from '../../lib/upload.js';
 
 // PUT /api/learning/[id] — Admin edit material (title, description, category)
 // DELETE /api/learning/[id] — Admin soft-delete (is_active = 0)
-export async function onRequestPut({ request, env, data }) {
+export const onRequestPut = async ({ request, env, data }) => {
   const user = data.user;
   if (user.role !== 'Admin') return err('Only Admin can edit materials', 403);
 

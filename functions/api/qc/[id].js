@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/qc/[id] — Get QC project details
-export async function onRequestGet({ params, env, data }) {
+export const onRequestGet = async ({ params, env, data }) => {
   const user = data.user;
   const id = parseInt(params.id);
   if (!id) return err('Invalid project ID', 400);

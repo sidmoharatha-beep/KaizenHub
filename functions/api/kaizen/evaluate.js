@@ -5,7 +5,7 @@ import { notify } from '../../lib/notifications.js';
 import { isWithinWindow } from '../../lib/timeline.js';
 
 // POST /api/kaizen/evaluate — Selected evaluator submits evaluation
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   // Timeline check

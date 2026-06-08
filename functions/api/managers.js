@@ -1,6 +1,6 @@
 import { json, err, getSession } from './_utils.js';
 
-export async function onRequestOptions() {
+export const onRequestOptions = async () => {
   return new Response(null, {
     headers: {
       'Access-Control-Allow-Origin': '*',
@@ -8,10 +8,10 @@ export async function onRequestOptions() {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
-}
+};
 
 // GET /api/managers — returns all managers (accessible by any logged-in user)
-export async function onRequestGet({ request, env }) {
+export const onRequestGet = async ({ request, env }) => {
   const session = await getSession(request, env);
   if (!session) return err('Unauthorized', 401);
 
@@ -20,4 +20,4 @@ export async function onRequestGet({ request, env }) {
   ).all();
 
   return json({ managers: results || [] });
-}
+};

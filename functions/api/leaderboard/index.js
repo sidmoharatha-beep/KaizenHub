@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/leaderboard — Get leaderboard rankings
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   const url = new URL(request.url);
   const category = url.searchParams.get('category') || 'overall';
   const period = url.searchParams.get('period') || 'all_time';
@@ -23,7 +23,7 @@ export async function onRequestGet({ request, env, data }) {
         JOIN users u ON lc.user_id = u.id
         LEFT JOIN departments d ON u.department_id = d.id
         LEFT JOIN shifts s ON u.shift_id = s.id
-        WHERE lc.category = ? AND lc.period = ? AND u.department_id = ?
+        WHERE lc.category = ? AND lc.period = ? AND u.department_id = ?`
         ORDER BY lc.points DESC
         LIMIT ?
       `;

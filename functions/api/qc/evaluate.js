@@ -5,7 +5,7 @@ import { notifyMany } from '../../lib/notifications.js';
 import { isWithinWindow } from '../../lib/timeline.js';
 
 // POST /api/qc/evaluate — Panel final evaluation
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   // Timeline check

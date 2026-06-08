@@ -1,6 +1,6 @@
 import { json } from './_utils.js';
 
-export async function onRequestGet({ env, data }) {
+export const onRequestGet = async ({ env, data }) => {
   const user = data.user;
 
   try {

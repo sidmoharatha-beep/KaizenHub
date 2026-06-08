@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // POST /api/qc/members — Add/remove team members
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   let body;
