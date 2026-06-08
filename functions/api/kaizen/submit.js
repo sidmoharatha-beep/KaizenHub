@@ -145,12 +145,15 @@ export async function onRequestPost({ request, env, data }) {
     // Insert new kaizen with status = Submitted
     const result = await env.DB.prepare(`
       INSERT INTO kaizen_ideas (
-        user_id, title, description, category, before_after, expected_impact,
+        user_id, title, problem, root_cause, solution,
+        description, category, before_after, expected_impact,
         tangible_benefits, intangible_benefits,
         department_id, attachment_url, approver_id, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted')
     `).bind(
-      user.id, title.trim(), description.trim(), category.trim(), before_after.trim(), expected_impact.trim(),
+      user.id, title.trim(),
+      description.trim(), before_after?.trim() || 'N/A', expected_impact?.trim() || 'N/A',
+      description.trim(), category.trim(), before_after?.trim() || null, expected_impact?.trim() || null,
       body.tangible_benefits?.trim() || null, body.intangible_benefits?.trim() || null,
       deptId, attachment_url, approverId
     ).run();
