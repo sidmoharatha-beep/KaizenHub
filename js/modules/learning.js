@@ -23,7 +23,8 @@ export async function renderLearning(container) {
           <select name="category" required>
             <option value="">Select type...</option>
             ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
-          </select></div>
+          </select></div>`;
+}
         <div class="form-row"><label>Description</label><textarea name="description" rows="2" placeholder="Optional description"></textarea></div>
         <div class="form-row">
           <label>File * <span style="font-weight:400;color:var(--charcoal-xlight);font-size:11px">Max 5MB</span></label>

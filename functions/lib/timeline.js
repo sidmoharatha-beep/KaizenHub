@@ -8,7 +8,7 @@ const RULES = {
   qc_panel: { start: 1, end: 15, quarterStart: true }
 };
 
-export function isWithinWindow(module) {
+export const isWithinWindow = (module) => {
   const rule = RULES[module];
   if (!rule) return { allowed: true, message: 'No timeline restriction' };
 

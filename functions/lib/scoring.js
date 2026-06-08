@@ -22,7 +22,9 @@ export const Scoring = {
   },
 
   // Kaizen approval reward (fixed at 50pts)
-  kaizenApproval: () => 50,
+  kaizenApproval: () => {
+    return 50;
+  },
 
   // Kaizen implementation reward by final evaluation score (0-100)
   // Single evaluator scores 5 criteria on 1-3 scale

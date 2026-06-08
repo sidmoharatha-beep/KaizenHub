@@ -1,6 +1,6 @@
 import { apiFetch, apiPost, apiPut, apiDelete, esc, toast } from '../app.js';
 
-export async function renderAdmin() {
+export const renderAdmin = async () => {
   const el = document.getElementById('admin-content');
   if (!el) return;
   el.innerHTML = '<div class="loading">Loading admin...</div>';
@@ -24,6 +24,7 @@ export async function renderAdmin() {
           <div><div style="font-size:28px;font-weight:800;color:var(--navy)">${summary.total_rewards_distributed||0}</div><div style="font-size:11px;color:var(--muted)">Points Distributed</div></div>
           <div><div style="font-size:28px;font-weight:800;color:var(--navy)">${summary.total_transactions||0}</div><div style="font-size:11px;color:var(--muted)">Transactions</div></div>
         </div>
+`
       </div>
       <div class="kpi-grid">${Object.entries(by_module||{}).map(([mod,stats])=>`<div class="kpi-card"><div class="kpi-val">${stats.total||0}</div><div class="kpi-label">${mod} Submissions</div></div>`).join('')}</div>
       <p class="section-label">Top Performers</p>

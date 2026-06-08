@@ -1,6 +1,6 @@
 import { apiFetch, esc, statusBadge, fmtDate, toast, currentUser } from '../app.js';
 
-export async function renderReviewQueue() {
+export const renderReviewQueue = async () => {
   const el = document.getElementById('review-content');
   if (!el) return;
 

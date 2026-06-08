@@ -1,6 +1,6 @@
 import { apiFetch, esc, fmtDate, toast, currentUser } from '../app.js';
 
-export async function renderRewards() {
+export const renderRewards = async () => {
   const el = document.getElementById('reward-content');
   if (!el) return;
   el.innerHTML = '<div class="loading">Loading wallet...</div>';
@@ -24,6 +24,7 @@ export async function renderRewards() {
       `).join('') || '<div class="empty">No points yet</div>'}
     </div>
     <p class="section-label">Recent Transactions</p>
+`;}
     <div class="card">
       ${(recent_transactions || []).length ? (recent_transactions || []).slice(0, 10).map(t => `
         <div class="ledger-row">
