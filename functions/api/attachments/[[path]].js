@@ -2,7 +2,7 @@ import { err } from '../_utils.js';
 import { getAttachment } from '../../lib/upload.js';
 
 // GET /api/attachments/[...path] — Serve files from R2
-export async function onRequestGet({ params, env, data }) {
+export const onRequestGet = async ({ params, env, data }) => {
   if (!data.user) return err('Unauthorized', 401);
 
   const key = params.path;
@@ -12,4 +12,4 @@ export async function onRequestGet({ params, env, data }) {
   if (!response) return err('File not found', 404);
 
   return response;
-}
+};
