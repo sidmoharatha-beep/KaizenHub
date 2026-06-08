@@ -4,7 +4,7 @@ import { notify } from '../../lib/notifications.js';
 import { isWithinWindow } from '../../lib/timeline.js';
 
 // POST /api/kaizen/submit — Stage 1: New kaizen OR Stage 2: Implementation evidence
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   let body;
