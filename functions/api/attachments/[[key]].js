@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/attachments/* — Serve file from R2 bucket
-export async function onRequestGet({ request, env }) {
+export const onRequestGet = async ({ request, env }) => {
   const pathname = new URL(request.url).pathname;
   const key = pathname.replace(/^\/api\/attachments\//, '');
   if (!key) return err('File key required', 400);
@@ -19,4 +19,4 @@ export async function onRequestGet({ request, env }) {
   } catch (e) {
     return err('Failed to serve file: ' + e.message, 500);
   }
-}
+};
