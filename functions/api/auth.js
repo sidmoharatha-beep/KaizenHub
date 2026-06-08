@@ -1,5 +1,17 @@
 import { json, err, uuid, verifyPassword } from './_utils.js';
 
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
+}
+
 export async function onRequestPost({ request, env }) {
   try {
     const { email, password } = await request.json();

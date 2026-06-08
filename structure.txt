@@ -1,0 +1,453 @@
+Folder PATH listing for volume OS
+Volume serial number is 00000057 3CE9:D800
+C:.
+¦   .tmp_admin_hr.sql
+¦   .tmp_audit.sql
+¦   .tmp_qc.sql
+¦   backup-2026-06-02.sql
+¦   create-test.ps1
+¦   create2.ps1
+¦   index.html
+¦   login.ps1
+¦   login2.ps1
+¦   migrate.sql
+¦   package-lock.json
+¦   package.json
+¦   run-beh.bat
+¦   run-create.bat
+¦   run-data.bat
+¦   run-login.bat
+¦   run-login2.bat
+¦   schema.sql
+¦   seed-admin.mjs
+¦   seed-admin.sql
+¦   SETUP.md
+¦   structure.txt
+¦   STYLE_GUIDE.md
+¦   test-auth.ps1
+¦   test-correct.ps1
+¦   test-create-user.ps1
+¦   test-create-user2.ps1
+¦   test-create-user3.ps1
+¦   test-create-user4.ps1
+¦   test-get-api.ps1
+¦   test-get.ps1
+¦   test-login.ps1
+¦   test-login2.ps1
+¦   test-login3.ps1
+¦   test-manual.ps1
+¦   test-nopreflight.ps1
+¦   test-options.ps1
+¦   test-simple.ps1
+¦   wrangler.toml
+¦   
++---.wrangler
+¦   +---cache
+¦   ¦       cf.json
+¦   ¦       pages.json
+¦   ¦       wrangler-account.json
+¦   ¦       
+¦   +---state
+¦   ¦   +---v3
+¦   ¦       +---cache
+¦   ¦       ¦   +---miniflare-CacheObject
+¦   ¦       ¦           metadata.sqlite
+¦   ¦       ¦           metadata.sqlite-shm
+¦   ¦       ¦           metadata.sqlite-wal
+¦   ¦       ¦           
+¦   ¦       +---d1
+¦   ¦       ¦   +---miniflare-D1DatabaseObject
+¦   ¦       ¦           0a2280aff6a66519fe16cdcf0da9adb70efbd2d6eaea94be829e77f660c2a48f.sqlite
+¦   ¦       ¦           0a2280aff6a66519fe16cdcf0da9adb70efbd2d6eaea94be829e77f660c2a48f.sqlite-shm
+¦   ¦       ¦           0a2280aff6a66519fe16cdcf0da9adb70efbd2d6eaea94be829e77f660c2a48f.sqlite-wal
+¦   ¦       ¦           8953c5cac9ec8a04fdb56ed9d924a5352cc34ca419fd43e8f3d527ed70a4117a.sqlite
+¦   ¦       ¦           8953c5cac9ec8a04fdb56ed9d924a5352cc34ca419fd43e8f3d527ed70a4117a.sqlite-shm
+¦   ¦       ¦           8953c5cac9ec8a04fdb56ed9d924a5352cc34ca419fd43e8f3d527ed70a4117a.sqlite-wal
+¦   ¦       ¦           98c45dfa5a4e37d78dca9e60acc7ab3befe54db3c0cea3ddeb3b53ae3b6ecc30.sqlite
+¦   ¦       ¦           98c45dfa5a4e37d78dca9e60acc7ab3befe54db3c0cea3ddeb3b53ae3b6ecc30.sqlite-shm
+¦   ¦       ¦           98c45dfa5a4e37d78dca9e60acc7ab3befe54db3c0cea3ddeb3b53ae3b6ecc30.sqlite-wal
+¦   ¦       ¦           a12a9fddef7f47974fc3b4ca77f3e049f34918cb6629249dba47aeac3683bfc5.sqlite
+¦   ¦       ¦           a12a9fddef7f47974fc3b4ca77f3e049f34918cb6629249dba47aeac3683bfc5.sqlite-shm
+¦   ¦       ¦           a12a9fddef7f47974fc3b4ca77f3e049f34918cb6629249dba47aeac3683bfc5.sqlite-wal
+¦   ¦       ¦           metadata.sqlite
+¦   ¦       ¦           metadata.sqlite-shm
+¦   ¦       ¦           metadata.sqlite-wal
+¦   ¦       ¦           
+¦   ¦       +---r2
+¦   ¦       ¦   +---miniflare-R2BucketObject
+¦   ¦       ¦           metadata.sqlite
+¦   ¦       ¦           metadata.sqlite-shm
+¦   ¦       ¦           metadata.sqlite-wal
+¦   ¦       ¦           
+¦   ¦       +---workflows
+¦   +---tmp
++---css
+¦       styles.css
+¦       
++---design-draft
+¦       photo-attachment-ux.html
+¦       TOKENS.md
+¦       
++---design-screenshots
+¦       admin-users.png
+¦       dashboard.png
+¦       kaizen-submit.png
+¦       login.png
+¦       qc-team-picker.png
+¦       
++---functions
+¦   ¦   _middleware.js
+¦   ¦   
+¦   +---api
+¦   ¦   ¦   audit-trail.js
+¦   ¦   ¦   audit.js
+¦   ¦   ¦   auth.js
+¦   ¦   ¦   dashboard.js
+¦   ¦   ¦   data.js
+¦   ¦   ¦   managers.js
+¦   ¦   ¦   me.js
+¦   ¦   ¦   submissions.js
+¦   ¦   ¦   users.js
+¦   ¦   ¦   _utils.js
+¦   ¦   ¦   
+¦   ¦   +---admin
+¦   ¦   ¦       analytics.js
+¦   ¦   ¦       reports.js
+¦   ¦   ¦       
+¦   ¦   +---attachments
+¦   ¦   ¦       [[key]].js
+¦   ¦   ¦       [[path]].js
+¦   ¦   ¦       
+¦   ¦   +---auth
+¦   ¦   +---behavioral
+¦   ¦   ¦       approve.js
+¦   ¦   ¦       evaluate.js
+¦   ¦   ¦       list.js
+¦   ¦   ¦       [id].js
+¦   ¦   ¦       
+¦   ¦   +---kaizen
+¦   ¦   ¦       approve.js
+¦   ¦   ¦       evaluate.js
+¦   ¦   ¦       implement.js
+¦   ¦   ¦       screen.js
+¦   ¦   ¦       submit.js
+¦   ¦   ¦       [id].js
+¦   ¦   ¦       
+¦   ¦   +---leaderboard
+¦   ¦   ¦       index.js
+¦   ¦   ¦       refresh.js
+¦   ¦   ¦       
+¦   ¦   +---learning
+¦   ¦   ¦       list.js
+¦   ¦   ¦       submit.js
+¦   ¦   ¦       [[id]].js
+¦   ¦   ¦       
+¦   ¦   +---notifications
+¦   ¦   ¦       count.js
+¦   ¦   ¦       index.js
+¦   ¦   ¦       
+¦   ¦   +---qc
+¦   ¦   ¦       evaluate.js
+¦   ¦   ¦       members.js
+¦   ¦   ¦       screen.js
+¦   ¦   ¦       submit.js
+¦   ¦   ¦       [id].js
+¦   ¦   ¦       
+¦   ¦   +---quality
+¦   ¦   ¦       review.js
+¦   ¦   ¦       submit.js
+¦   ¦   ¦       [id].js
+¦   ¦   ¦       
+¦   ¦   +---rewards
+¦   ¦   ¦       history.js
+¦   ¦   ¦       index.js
+¦   ¦   ¦       
+¦   ¦   +---safety
+¦   ¦   ¦       review.js
+¦   ¦   ¦       submit.js
+¦   ¦   ¦       [id].js
+¦   ¦   ¦       
+¦   ¦   +---timeline
+¦   ¦           index.js
+¦   ¦           
+¦   +---lib
+¦           dedup.js
+¦           notifications.js
+¦           rbac.js
+¦           rewards.js
+¦           scoring.js
+¦           timeline.js
+¦           upload.js
+¦           
++---js
+¦   ¦   app.js
+¦   ¦   auth.js
+¦   ¦   
+¦   +---modules
+¦           admin.js
+¦           dashboard.js
+¦           kaizen.js
+¦           leaderboard.js
+¦           learning.js
+¦           quality.js
+¦           review.js
+¦           rewards.js
+¦           safety.js
+¦           
++---migrations
+¦       0001_core_rbac.sql
+¦       0002_modules.sql
+¦       0003_seed.sql
+¦       0004_patch_users.sql
+¦       0005_enterprise.sql
+¦       0006_fix_users.sql
+¦       0009_learning_module.sql
+¦       
++---node_modules
+    ¦   .package-lock.json
+    ¦   
+    +---.bin
+    ¦       playwright
+    ¦       playwright-core
+    ¦       playwright-core.cmd
+    ¦       playwright-core.ps1
+    ¦       playwright.cmd
+    ¦       playwright.ps1
+    ¦       
+    +---playwright
+    ¦   ¦   cli.js
+    ¦   ¦   index.d.ts
+    ¦   ¦   index.js
+    ¦   ¦   index.mjs
+    ¦   ¦   jsx-runtime.js
+    ¦   ¦   jsx-runtime.mjs
+    ¦   ¦   LICENSE
+    ¦   ¦   NOTICE
+    ¦   ¦   package.json
+    ¦   ¦   README.md
+    ¦   ¦   test.d.ts
+    ¦   ¦   test.js
+    ¦   ¦   test.mjs
+    ¦   ¦   ThirdPartyNotices.txt
+    ¦   ¦   
+    ¦   +---lib
+    ¦   ¦   ¦   errorContext.js
+    ¦   ¦   ¦   globals.js
+    ¦   ¦   ¦   index.js
+    ¦   ¦   ¦   isomorphic.js
+    ¦   ¦   ¦   isomorphic.js.txt
+    ¦   ¦   ¦   package.js
+    ¦   ¦   ¦   program.js
+    ¦   ¦   ¦   util.js
+    ¦   ¦   ¦   
+    ¦   ¦   +---agents
+    ¦   ¦   ¦       agentParser.js
+    ¦   ¦   ¦       copilot-setup-steps.yml
+    ¦   ¦   ¦       generateAgents.js
+    ¦   ¦   ¦       playwright-test-coverage.prompt.md
+    ¦   ¦   ¦       playwright-test-generate.prompt.md
+    ¦   ¦   ¦       playwright-test-generator.agent.md
+    ¦   ¦   ¦       playwright-test-heal.prompt.md
+    ¦   ¦   ¦       playwright-test-healer.agent.md
+    ¦   ¦   ¦       playwright-test-plan.prompt.md
+    ¦   ¦   ¦       playwright-test-planner.agent.md
+    ¦   ¦   ¦       
+    ¦   ¦   +---cli
+    ¦   ¦   ¦       reportActions.js
+    ¦   ¦   ¦       testActions.js
+    ¦   ¦   ¦       
+    ¦   ¦   +---common
+    ¦   ¦   ¦       index.js
+    ¦   ¦   ¦       index.js.txt
+    ¦   ¦   ¦       
+    ¦   ¦   +---loader
+    ¦   ¦   ¦       loaderProcessEntry.js
+    ¦   ¦   ¦       loaderProcessEntry.js.txt
+    ¦   ¦   ¦       
+    ¦   ¦   +---matchers
+    ¦   ¦   ¦       expect.js
+    ¦   ¦   ¦       expect.js.LICENSE
+    ¦   ¦   ¦       expect.js.txt
+    ¦   ¦   ¦       
+    ¦   ¦   +---mcp
+    ¦   ¦   ¦   +---test
+    ¦   ¦   ¦           browserBackend.js
+    ¦   ¦   ¦           generatorTools.js
+    ¦   ¦   ¦           plannerTools.js
+    ¦   ¦   ¦           seed.js
+    ¦   ¦   ¦           streams.js
+    ¦   ¦   ¦           testBackend.js
+    ¦   ¦   ¦           testContext.js
+    ¦   ¦   ¦           testTool.js
+    ¦   ¦   ¦           testTools.js
+    ¦   ¦   ¦           
+    ¦   ¦   +---runner
+    ¦   ¦   ¦       index.js
+    ¦   ¦   ¦       index.js.txt
+    ¦   ¦   ¦       
+    ¦   ¦   +---transform
+    ¦   ¦   ¦       babelBundle.js
+    ¦   ¦   ¦       babelBundle.js.LICENSE
+    ¦   ¦   ¦       babelBundle.js.txt
+    ¦   ¦   ¦       esmLoader.js
+    ¦   ¦   ¦       esmLoader.js.LICENSE
+    ¦   ¦   ¦       esmLoader.js.txt
+    ¦   ¦   ¦       
+    ¦   ¦   +---worker
+    ¦   ¦           workerProcessEntry.js
+    ¦   ¦           workerProcessEntry.js.txt
+    ¦   ¦           
+    ¦   +---types
+    ¦           test.d.ts
+    ¦           testReporter.d.ts
+    ¦           
+    +---playwright-core
+        ¦   browsers.json
+        ¦   cli.js
+        ¦   index.d.ts
+        ¦   index.js
+        ¦   index.mjs
+        ¦   LICENSE
+        ¦   NOTICE
+        ¦   package.json
+        ¦   README.md
+        ¦   ThirdPartyNotices.txt
+        ¦   
+        +---bin
+        ¦       install_media_pack.ps1
+        ¦       install_webkit_wsl.ps1
+        ¦       reinstall_chrome_beta_linux.sh
+        ¦       reinstall_chrome_beta_mac.sh
+        ¦       reinstall_chrome_beta_win.ps1
+        ¦       reinstall_chrome_stable_linux.sh
+        ¦       reinstall_chrome_stable_mac.sh
+        ¦       reinstall_chrome_stable_win.ps1
+        ¦       reinstall_msedge_beta_linux.sh
+        ¦       reinstall_msedge_beta_mac.sh
+        ¦       reinstall_msedge_beta_win.ps1
+        ¦       reinstall_msedge_dev_linux.sh
+        ¦       reinstall_msedge_dev_mac.sh
+        ¦       reinstall_msedge_dev_win.ps1
+        ¦       reinstall_msedge_stable_linux.sh
+        ¦       reinstall_msedge_stable_mac.sh
+        ¦       reinstall_msedge_stable_win.ps1
+        ¦       
+        +---lib
+        ¦   ¦   bootstrap.js
+        ¦   ¦   coreBundle.js
+        ¦   ¦   package.js
+        ¦   ¦   serverRegistry.js
+        ¦   ¦   serverRegistry.js.LICENSE
+        ¦   ¦   utilsBundle.js
+        ¦   ¦   utilsBundle.js.LICENSE
+        ¦   ¦   xdg-open
+        ¦   ¦   
+        ¦   +---entry
+        ¦   ¦       cliDaemon.js
+        ¦   ¦       dashboardApp.js
+        ¦   ¦       mcp.js
+        ¦   ¦       oopBrowserDownload.js
+        ¦   ¦       
+        ¦   +---server
+        ¦   ¦   ¦   deviceDescriptorsSource.json
+        ¦   ¦   ¦   
+        ¦   ¦   +---chromium
+        ¦   ¦   ¦       appIcon.png
+        ¦   ¦   ¦       
+        ¦   ¦   +---electron
+        ¦   ¦           loader.js
+        ¦   ¦           
+        ¦   +---tools
+        ¦   ¦   +---cli-client
+        ¦   ¦   ¦   ¦   channelSessions.js
+        ¦   ¦   ¦   ¦   cli.js
+        ¦   ¦   ¦   ¦   help.json
+        ¦   ¦   ¦   ¦   minimist.js
+        ¦   ¦   ¦   ¦   output.js
+        ¦   ¦   ¦   ¦   program.js
+        ¦   ¦   ¦   ¦   registry.js
+        ¦   ¦   ¦   ¦   session.js
+        ¦   ¦   ¦   ¦   
+        ¦   ¦   ¦   +---skill
+        ¦   ¦   ¦       ¦   SKILL.md
+        ¦   ¦   ¦       ¦   
+        ¦   ¦   ¦       +---references
+        ¦   ¦   ¦               element-attributes.md
+        ¦   ¦   ¦               playwright-tests.md
+        ¦   ¦   ¦               request-mocking.md
+        ¦   ¦   ¦               running-code.md
+        ¦   ¦   ¦               session-management.md
+        ¦   ¦   ¦               spec-driven-testing.md
+        ¦   ¦   ¦               storage-state.md
+        ¦   ¦   ¦               test-generation.md
+        ¦   ¦   ¦               tracing.md
+        ¦   ¦   ¦               video-recording.md
+        ¦   ¦   ¦               
+        ¦   ¦   +---dashboard
+        ¦   ¦   ¦       appIcon.png
+        ¦   ¦   ¦       
+        ¦   ¦   +---trace
+        ¦   ¦   ¦       SKILL.md
+        ¦   ¦   ¦       
+        ¦   ¦   +---utils
+        ¦   ¦           extension.js
+        ¦   ¦           socketConnection.js
+        ¦   ¦           
+        ¦   +---vite
+        ¦       +---dashboard
+        ¦       ¦   ¦   index.html
+        ¦       ¦   ¦   playwright-logo.svg
+        ¦       ¦   ¦   
+        ¦       ¦   +---assets
+        ¦       ¦           codicon-DCmgc-ay.ttf
+        ¦       ¦           firefox-1bWoP6pv.svg
+        ¦       ¦           firefox-beta-k3eOH_eK.svg
+        ¦       ¦           firefox-nightly-Cp5nfeDT.svg
+        ¦       ¦           index-BY2S1tHT.css
+        ¦       ¦           index-DpEq2p62.js
+        ¦       ¦           safari-na3_-uQk.svg
+        ¦       ¦           
+        ¦       +---htmlReport
+        ¦       ¦       index.html
+        ¦       ¦       report.css
+        ¦       ¦       report.js
+        ¦       ¦       
+        ¦       +---recorder
+        ¦       ¦   ¦   index.html
+        ¦       ¦   ¦   playwright-logo.svg
+        ¦       ¦   ¦   
+        ¦       ¦   +---assets
+        ¦       ¦           codeMirrorModule-BHYmBp6h.js
+        ¦       ¦           codeMirrorModule-DYBRYzYX.css
+        ¦       ¦           codicon-DCmgc-ay.ttf
+        ¦       ¦           index-4ZiSSCmn.css
+        ¦       ¦           index-DA10QRaq.js
+        ¦       ¦           
+        ¦       +---traceViewer
+        ¦           ¦   codeMirrorModule.DYBRYzYX.css
+        ¦           ¦   codicon.DCmgc-ay.ttf
+        ¦           ¦   defaultSettingsView.BDKsFU3c.css
+        ¦           ¦   index.BCnMPevh.js
+        ¦           ¦   index.CzXZzn5A.css
+        ¦           ¦   index.html
+        ¦           ¦   manifest.webmanifest
+        ¦           ¦   playwright-logo.svg
+        ¦           ¦   snapshot.html
+        ¦           ¦   snapshot.v8KI4P3m.js
+        ¦           ¦   sw.bundle.js
+        ¦           ¦   uiMode.Btcz36p_.css
+        ¦           ¦   uiMode.C2Efnu2P.js
+        ¦           ¦   uiMode.html
+        ¦           ¦   xtermModule.DYP7pi_n.css
+        ¦           ¦   
+        ¦           +---assets
+        ¦                   codeMirrorModule-Ds_H_9Yq.js
+        ¦                   defaultSettingsView-D31xz8zv.js
+        ¦                   urlMatch-BYQrIQwR.js
+        ¦                   xtermModule-CsJ4vdCR.js
+        ¦                   
+        +---types
+                protocol.d.ts
+                structs.d.ts
+                types.d.ts
+                

@@ -1,6 +1,6 @@
 -- 0002_modules.sql
 -- SAFETY
-CREATE TABLE safety_reports (
+CREATE TABLE IF NOT EXISTS safety_reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   subcategory TEXT NOT NULL CHECK(subcategory IN ('Hazard','Near Miss','SUSA')),
@@ -23,7 +23,7 @@ CREATE TABLE safety_reports (
 );
 
 -- QUALITY
-CREATE TABLE quality_reports (
+CREATE TABLE IF NOT EXISTS quality_reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   subcategory TEXT NOT NULL CHECK(subcategory IN ('Quality Hazard','Quality SUSA')),
@@ -44,7 +44,7 @@ CREATE TABLE quality_reports (
 );
 
 -- KAIZEN
-CREATE TABLE kaizen_ideas (
+CREATE TABLE IF NOT EXISTS kaizen_ideas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE kaizen_ideas (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE kaizen_implementations (
+CREATE TABLE IF NOT EXISTS kaizen_implementations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   kaizen_id INTEGER UNIQUE NOT NULL REFERENCES kaizen_ideas(id),
   evidence_url TEXT NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE kaizen_implementations (
   status TEXT DEFAULT 'Pending' CHECK(status IN ('Pending','Manager Review','Completed'))
 );
 
-CREATE TABLE kaizen_evaluations (
+CREATE TABLE IF NOT EXISTS kaizen_evaluations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   kaizen_id INTEGER NOT NULL REFERENCES kaizen_ideas(id),
   evaluator_id INTEGER NOT NULL REFERENCES users(id),
@@ -89,7 +89,7 @@ CREATE TABLE kaizen_evaluations (
 );
 
 -- QC MODULE
-CREATE TABLE quality_circle_projects (
+CREATE TABLE IF NOT EXISTS quality_circle_projects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   owner_id INTEGER NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
@@ -107,13 +107,13 @@ CREATE TABLE quality_circle_projects (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE quality_circle_members (
+CREATE TABLE IF NOT EXISTS quality_circle_members (
   project_id INTEGER NOT NULL REFERENCES quality_circle_projects(id),
   user_id INTEGER NOT NULL REFERENCES users(id),
   PRIMARY KEY (project_id, user_id)
 );
 
-CREATE TABLE qc_12step_scores (
+CREATE TABLE IF NOT EXISTS qc_12step_scores (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   project_id INTEGER NOT NULL REFERENCES quality_circle_projects(id),
   step_number INTEGER NOT NULL CHECK(step_number BETWEEN 1 AND 12),
@@ -123,7 +123,7 @@ CREATE TABLE qc_12step_scores (
 );
 
 -- BEHAVIORAL
-CREATE TABLE behavioral_evaluations (
+CREATE TABLE IF NOT EXISTS behavioral_evaluations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   evaluator_id INTEGER NOT NULL REFERENCES users(id),
@@ -147,7 +147,7 @@ CREATE TABLE behavioral_evaluations (
 );
 
 -- REWARDS + NOTIFICATIONS
-CREATE TABLE reward_transactions (
+CREATE TABLE IF NOT EXISTS reward_transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   source_type TEXT NOT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE reward_transactions (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   type TEXT NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE notifications (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE timeline_rules (
+CREATE TABLE IF NOT EXISTS timeline_rules (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   module TEXT NOT NULL,
   start_day INTEGER,

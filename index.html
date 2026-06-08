@@ -3,961 +3,153 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>KaizenHub</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
-<style>
-:root{
-  --navy:#0D1B4B;--blue:#1A3A8F;--sky:#2E7DD1;
-  --gold:#FFD166;--accent:#F5A623;
-  --bg:#F0F4FF;--card:#fff;--text:#0D1B4B;
-  --muted:#6B7BAA;--border:#D6E0FF;
-  --green:#0f6e4a;--gbg:#D1FAE5;
-  --red:#991b1b;--rbg:#FEE2E2;
-  --yellow:#856404;--ybg:#FFF3CD;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-
-/* ── AUTH ── */
-#auth-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
-.auth-logo{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--navy);margin-bottom:6px;}
-.auth-logo span{color:var(--sky);}
-.auth-sub{font-size:13px;color:var(--muted);margin-bottom:32px;}
-.auth-card{background:#fff;border-radius:20px;border:1.5px solid var(--border);padding:24px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(13,27,75,.08);}
-.auth-card h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px;}
-.fg{margin-bottom:14px;}
-.fg label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;}
-.fg input,.fg select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;-webkit-appearance:none;}
-.fg input:focus,.fg select:focus{border-color:var(--sky);}
-.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:4px;transition:opacity .2s;}
-.btn-primary:active,.btn-primary:disabled{opacity:.7;}
-.auth-err{color:#991b1b;font-size:13px;margin-top:10px;text-align:center;display:none;}
-.auth-cf{font-size:11px;color:var(--muted);margin-top:18px;text-align:center;}
-
-/* ── APP SHELL ── */
-#app{display:none;padding-bottom:72px;}
-.topbar{background:linear-gradient(135deg,var(--navy),var(--blue));padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
-.topbar-left h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;}
-.topbar-left h2 span{color:var(--gold);}
-.topbar-left p{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px;}
-.topbar-right{display:flex;align-items:center;gap:10px;}
-.role-pill{font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 10px;border-radius:20px;text-transform:uppercase;}
-.role-operator{background:rgba(255,209,102,.2);color:var(--gold);}
-.role-manager{background:rgba(100,200,150,.2);color:#7DFFB2;}
-.role-admin{background:rgba(200,100,100,.2);color:#FFB3B3;}
-.btn-logout{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-
-/* ── PAGES ── */
-.page{display:none;padding:16px;}
-.page.active{display:block;}
-.section-label{font-size:11px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--sky);margin-bottom:12px;}
-.card{background:#fff;border-radius:16px;border:1.5px solid var(--border);padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(13,27,75,.05);}
-
-/* ── FORM ── */
-.form-row{margin-bottom:13px;}
-.form-row label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
-.form-row input,.form-row select,.form-row textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;outline:none;-webkit-appearance:none;}
-.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--sky);}
-.form-row textarea{resize:vertical;min-height:88px;}
-
-/* ── STATUS BADGES ── */
-.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.4px;}
-.badge-pending{background:var(--ybg);color:var(--yellow);}
-.badge-approved{background:var(--gbg);color:var(--green);}
-.badge-rejected{background:var(--rbg);color:var(--red);}
-
-/* ── SUBMISSION CARDS ── */
-.sub-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:14px;margin-bottom:10px;border-left:3px solid var(--sky);}
-.sub-card.approved{border-left-color:#1a7a4a;}
-.sub-card.rejected{border-left-color:#c0392b;}
-.sub-card h4{font-size:14px;font-weight:600;color:var(--navy);}
-.sub-meta{font-size:12px;color:var(--muted);margin:3px 0 6px;}
-.sub-excerpt{font-size:12px;color:#444;margin-bottom:8px;}
-.sub-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-
-/* ── REVIEW ACTIONS ── */
-.action-row{display:flex;gap:8px;margin-top:10px;}
-.btn-approve{flex:1;padding:9px;background:var(--gbg);color:var(--green);border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.btn-reject{flex:1;padding:9px;background:var(--rbg);color:var(--red);border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.feedback-box{width:100%;margin-top:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;}
-.feedback-box:focus{border-color:var(--sky);}
-
-/* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-.kpi-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:14px 12px;text-align:center;}
-.kpi-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--navy);}
-.kpi-label{font-size:11px;color:var(--muted);margin-top:2px;}
-
-/* ── LEADERBOARD ── */
-.lb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-.lb-row:last-child{border-bottom:none;}
-.lb-rank{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--muted);width:28px;text-align:center;}
-.lb-rank.top{color:var(--accent);}
-.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--navy));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;}
-.lb-info{flex:1;}
-.lb-info h4{font-size:14px;font-weight:600;}
-.lb-info p{font-size:11px;color:var(--muted);}
-.lb-pts{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--sky);}
-
-/* ── REWARDS ── */
-.reward-hero{background:linear-gradient(135deg,var(--navy),var(--sky));border-radius:18px;padding:24px;text-align:center;margin-bottom:14px;}
-.reward-hero .pts-big{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:var(--gold);}
-.reward-hero .pts-label{color:rgba(255,255,255,.7);font-size:13px;}
-.reward-hero .emp-name{color:#fff;font-size:16px;font-weight:600;margin-bottom:6px;}
-.ledger-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
-.ledger-row:last-child{border-bottom:none;}
-.ledger-pts{font-weight:700;font-size:14px;color:var(--green);}
-
-/* ── ADMIN USER ROWS ── */
-.user-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
-.user-row:last-child{border-bottom:none;}
-.user-info{flex:1;}
-.user-info h4{font-size:14px;font-weight:600;}
-.user-info p{font-size:11px;color:var(--muted);}
-.user-actions{display:flex;gap:6px;}
-.btn-sm{padding:5px 10px;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.btn-sm-reset{background:var(--ybg);color:var(--yellow);}
-.btn-sm-del{background:var(--rbg);color:var(--red);}
-
-/* ── AUDIT LOG ── */
-.audit-row{padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;}
-.audit-row:last-child{border-bottom:none;}
-.audit-action{font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
-.audit-meta{color:var(--muted);margin-top:2px;}
-
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(13,27,75,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;display:none;}
-.modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(13,27,75,.2);}
-.modal h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px;}
-.modal-actions{display:flex;gap:8px;margin-top:16px;}
-.btn-cancel{flex:1;padding:10px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.btn-confirm{flex:1;padding:10px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
-
-/* ── BOTTOM NAV ── */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--border);display:flex;z-index:100;}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 8px;cursor:pointer;gap:3px;}
-.nav-item svg{width:22px;height:22px;stroke:var(--muted);stroke-width:1.8;fill:none;transition:stroke .2s;}
-.nav-item span{font-size:10px;color:var(--muted);font-weight:500;}
-.nav-item.active svg{stroke:var(--sky);}
-.nav-item.active span{color:var(--sky);}
-
-/* ── MISC ── */
-.empty{text-align:center;padding:40px 16px;color:var(--muted);font-size:14px;line-height:1.7;}
-.loading{text-align:center;padding:30px;color:var(--muted);font-size:14px;}
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
-.toast.show{opacity:1;}
-.divider{text-align:center;font-size:12px;color:var(--muted);margin:12px 0;}
-.saving-chip{font-size:12px;color:var(--green);font-weight:600;}
-.feedback-text{font-size:12px;color:var(--red);margin-top:4px;font-style:italic;}
-.tab-btns{display:flex;gap:8px;margin-bottom:14px;}
-.tab-btn{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;background:#fff;color:var(--muted);}
-.tab-btn.active{background:var(--sky);color:#fff;border-color:var(--sky);}
-
-/* ── FILE UPLOAD ── */
-.file-upload-area{border:2px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
-.file-upload-area:hover{border-color:var(--sky);}
-.file-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.file-upload-area .upload-icon{font-size:22px;margin-bottom:4px;}
-.file-upload-area p{font-size:12px;color:var(--muted);}
-.file-chosen{font-size:12px;color:var(--green);font-weight:600;margin-top:5px;display:none;}
-
-/* ── SUSA DASHBOARD ── */
-.susa-banner{background:linear-gradient(135deg,#7b1c1c,#c0392b);border-radius:14px;padding:16px;margin-bottom:12px;color:#fff;}
-.susa-banner h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;}
-.susa-banner p{font-size:12px;opacity:.85;}
-.susa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.susa-kpi{background:#fff;border-radius:12px;border:1.5px solid #fecaca;padding:12px;text-align:center;}
-.susa-kpi .val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#991b1b;}
-.susa-kpi .lbl{font-size:10px;color:var(--muted);margin-top:2px;}
-.susa-checklist{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:14px;margin-bottom:10px;}
-.susa-checklist h4{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
-.chk-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
-.chk-item:last-child{border-bottom:none;}
-.chk-item .chk-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
-.chk-item .chk-text{flex:1;color:var(--text);}
-.chk-item .chk-severity{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;}
-.sev-high{background:#fecaca;color:#991b1b;}
-.sev-med{background:#fef3c7;color:#92400e;}
-.sev-low{background:#d1fae5;color:#065f46;}
-.susa-hint{background:#fff7ed;border-radius:10px;border:1.5px solid #fed7aa;padding:12px;font-size:12px;color:#92400e;margin-bottom:10px;}
-
-/* ── APPROVER BADGE ── */
-.approver-badge{display:inline-block;background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px;margin-top:4px;}
-</style>
+<title>OORJA 2.0 — KaizenHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/styles.css"/>
+<script type="importmap">
+{"imports":{"/js/app.js":"./js/app.js","/js/auth.js":"./js/auth.js"}}
+</script>
 </head>
 <body>
-
 <div class="toast" id="toast"></div>
 
-<!-- PASSWORD RESET MODAL -->
+<!-- RESET MODAL -->
 <div class="modal-overlay" id="reset-modal">
   <div class="modal">
-    <h3>🔑 Reset Password</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px" id="reset-modal-name"></p>
-    <div class="form-row">
-      <label>New Password</label>
-      <input type="text" id="reset-new-pass" placeholder="Min 8 characters"/>
-    </div>
+    <h3>Reset Password</h3>
+    <p id="reset-modal-name" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></p>
+    <div class="form-row"><label>New Password</label><input type="text" id="reset-new-pass" placeholder="Min 8 chars"/></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeResetModal()">Cancel</button>
-      <button class="btn-confirm" onclick="confirmReset()">Reset Password</button>
+      <button class="btn-confirm" onclick="confirmReset()">Reset</button>
     </div>
   </div>
 </div>
 
-<!-- DELETE USER MODAL -->
+<!-- DELETE MODAL -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal">
-    <h3>⚠ Delete User</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px" id="delete-modal-name"></p>
+    <h3>Delete User</h3>
+    <p id="delete-modal-name" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></p>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-      <button class="btn-confirm" style="background:linear-gradient(135deg,#991b1b,#c0392b)" onclick="confirmDelete()">Delete</button>
+      <button class="btn-confirm" style="background:linear-gradient(135deg,#DC2626,#991B1B)" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     AUTH SCREEN
-════════════════════════════════════════════ -->
+<!-- AUTH SCREEN -->
 <div id="auth-screen">
-  <div class="auth-logo">Kaizen<span>Hub</span></div>
-  <div class="auth-sub">Sign in to your account</div>
-
-  <div class="auth-card">
-    <h2>Welcome back</h2>
-    <div class="fg">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="you@company.com" autocomplete="username"/>
+  <!-- Left Panel — Branding -->
+  <div class="auth-panel-left">
+    <div class="hex-pattern">
+      <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 10L173.205 55V145L100 190L26.795 145V55L100 10Z" stroke="white" stroke-width="1.5"/>
+        <path d="M100 36L147.387 66.5V115.5L100 146L52.613 115.5V66.5L100 36Z" stroke="white" stroke-width="1.2"/>
+        <path d="M100 62L121.26 76V100L100 114L78.74 100V76L100 62Z" stroke="white" stroke-width="1"/>
+      </svg>
     </div>
-    <div class="fg">
-      <label>Password</label>
-      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"
-             onkeydown="if(event.key==='Enter')doLogin()"/>
+    <div class="auth-brand">
+      <div class="auth-wordmark">OOR<span>JA</span></div>
+      <div class="auth-tagline">KaizenHub — Continuous Improvement Portal</div>
     </div>
-    <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
-    <div class="auth-err" id="login-err"></div>
   </div>
-  <div class="auth-cf">Powered by Cloudflare Pages + D1</div>
+
+  <!-- Right Panel — Login Form -->
+  <div class="auth-panel-right">
+    <div class="auth-form-container">
+      <div class="auth-form-header">
+        <h2>Welcome back</h2>
+        <p>Sign in to your OORJA 2.0 workspace</p>
+      </div>
+      <div class="auth-card">
+        <div class="fg">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="you@company.com" autocomplete="username"/>
+        </div>
+        <div class="fg">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <button class="btn-primary" id="login-btn">Sign In →</button>
+        <div class="auth-err" id="login-err"></div>
+      </div>
+      <div class="auth-footer">
+        OORJA 2.0 · Powered by Cloudflare Pages + D1
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     APP SHELL
-════════════════════════════════════════════ -->
-<div id="app">
+<!-- APP SHELL -->
+<div id="app" style="display:none">
   <div class="topbar">
-    <div class="topbar-left">
-      <h2>Kaizen<span>Hub</span></h2>
-      <p id="topbar-sub">Loading...</p>
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <!-- Factory/Lightning bolt icon -->
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" stroke="white" stroke-width="0.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="topbar-title">OOR<span>JA</span> 2.0</div>
     </div>
-    <div class="topbar-right">
-      <span class="role-pill" id="role-pill"></span>
-      <button class="btn-logout" onclick="doLogout()">Sign out</button>
-    </div>
-  </div>
-
-  <!-- SUBMIT PAGE -->
-  <div class="page" id="page-submit">
-    <p class="section-label" style="margin-top:4px">New Submission</p>
-
-    <!-- SUSA Industry Dashboard (shown when SUSA Hazard selected) -->
-    <div id="susa-dashboard" style="display:none">
-      <div class="susa-banner">
-        <h3>⚠️ SUSA Hazard Report</h3>
-        <p>Safety Unsafe Act / Unsafe Situation — Industry Safety Dashboard</p>
-      </div>
-      <div class="susa-hint">📋 Before submitting, review the checklist below. Identify which category your hazard falls under and describe it clearly in the form.</div>
-      <div class="susa-grid">
-        <div class="susa-kpi"><div class="val" id="susa-total">—</div><div class="lbl">Total Hazards Reported</div></div>
-        <div class="susa-kpi"><div class="val" id="susa-open">—</div><div class="lbl">Open / Pending</div></div>
-        <div class="susa-kpi"><div class="val" id="susa-resolved">—</div><div class="lbl">Resolved</div></div>
-        <div class="susa-kpi"><div class="val" id="susa-rate" style="color:#f59e0b">—</div><div class="lbl">Resolution Rate</div></div>
-      </div>
-      <div class="susa-checklist">
-        <h4>🔍 SUSA Category Checklist</h4>
-        <div class="chk-item"><span class="chk-icon">⚡</span><div class="chk-text">Electrical hazard — exposed wiring, improper grounding</div><span class="chk-severity sev-high">HIGH</span></div>
-        <div class="chk-item"><span class="chk-icon">🔥</span><div class="chk-text">Fire / Explosion risk — flammable materials, blocked exits</div><span class="chk-severity sev-high">HIGH</span></div>
-        <div class="chk-item"><span class="chk-icon">🧪</span><div class="chk-text">Chemical exposure — improper storage, no PPE usage</div><span class="chk-severity sev-high">HIGH</span></div>
-        <div class="chk-item"><span class="chk-icon">🏗️</span><div class="chk-text">Working at height — missing guard rails, unstable platforms</div><span class="chk-severity sev-high">HIGH</span></div>
-        <div class="chk-item"><span class="chk-icon">🦺</span><div class="chk-text">PPE non-compliance — not wearing required safety gear</div><span class="chk-severity sev-med">MED</span></div>
-        <div class="chk-item"><span class="chk-icon">🚧</span><div class="chk-text">Unsafe housekeeping — slippery floors, blocked walkways</div><span class="chk-severity sev-med">MED</span></div>
-        <div class="chk-item"><span class="chk-icon">🔩</span><div class="chk-text">Machinery guarding — missing covers, bypass of safety devices</div><span class="chk-severity sev-med">MED</span></div>
-        <div class="chk-item"><span class="chk-icon">💡</span><div class="chk-text">Ergonomic risk — repetitive strain, awkward postures</div><span class="chk-severity sev-low">LOW</span></div>
-        <div class="chk-item"><span class="chk-icon">🪟</span><div class="chk-text">Poor lighting / ventilation in work area</div><span class="chk-severity sev-low">LOW</span></div>
-        <div class="chk-item"><span class="chk-icon">📦</span><div class="chk-text">Improper material handling / storage stacking</div><span class="chk-severity sev-low">LOW</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="form-row"><label>Idea Type</label>
-        <select id="f-type" onchange="onTypeChange(this.value)">
-          <option value="">Select type</option>
-          <option>Kaizen (Process Improvement)</option>
-          <option>QC Project</option>
-          <option>SUSA Hazard</option>
-          <option>Safety / Hazard</option>
-          <option>Cost Saving</option>
-        </select>
-      </div>
-      <div class="form-row"><label>Idea Title</label><input id="f-title" type="text" placeholder="Short title for your idea"/></div>
-      <div class="form-row"><label>Description</label><textarea id="f-desc" placeholder="Describe the problem and your improvement idea in detail..."></textarea></div>
-      <div class="form-row"><label>Estimated Cost Saving (₹/month)</label><input id="f-saving" type="number" placeholder="0 if not applicable"/></div>
-
-      <!-- Approver dropdown -->
-      <div class="form-row" id="approver-row">
-        <label>Send To (Approver) <span style="color:var(--red)">*</span></label>
-        <select id="f-approver">
-          <option value="">Loading managers...</option>
-        </select>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">Your submission will be routed to this manager for review</div>
-      </div>
-
-      <!-- File attachment (optional) -->
-      <div class="form-row">
-        <label>Attach File <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none">(optional — photo, document, sketch)</span></label>
-        <div class="file-upload-area" onclick="document.getElementById('f-file').click()">
-          <div class="upload-icon">📎</div>
-          <p>Tap to attach a file</p>
-          <p style="font-size:11px;margin-top:2px">JPG, PNG, PDF, DOCX — max 5MB</p>
-          <input type="file" id="f-file" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="onFileChosen(this)"/>
+    <div class="topbar-user">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">—</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name">Loading...</span>
+          <span class="user-role" id="user-role-label">—</span>
         </div>
-        <div class="file-chosen" id="file-chosen-name">📎 <span id="f-file-name"></span> <button onclick="clearFile()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕ Remove</button></div>
       </div>
-
-      <button class="btn-primary" onclick="submitIdea()">Submit Idea ✦</button>
+      <span class="role-pill" id="role-pill">—</span>
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign out
+      </button>
     </div>
   </div>
 
-  <!-- MY IDEAS PAGE -->
-  <div class="page" id="page-myideas">
-    <p class="section-label" style="margin-top:4px">My Submissions</p>
-    <div id="my-list"><div class="loading">Loading...</div></div>
+  <div class="page active" id="page-home">
+    <div id="home-content"><div class="loading">Loading dashboard...</div></div>
   </div>
 
-  <!-- REVIEW PAGE (manager/admin) -->
+  <div class="page" id="page-submit">
+    <div id="submit-content"><div class="loading">Loading...</div></div>
+  </div>
+
   <div class="page" id="page-review">
-    <p class="section-label" style="margin-top:4px">Screening Queue</p>
-    <div id="review-list"><div class="loading">Loading...</div></div>
+    <div id="review-content"><div class="loading">Loading...</div></div>
   </div>
 
-  <!-- DASHBOARD PAGE -->
-  <div class="page" id="page-dashboard">
-    <p class="section-label" style="margin-top:4px">Platform KPIs</p>
-    <div class="kpi-grid" id="kpi-grid"></div>
-    <p class="section-label">Live Leaderboard</p>
-    <div class="card" id="leaderboard"></div>
-  </div>
-
-  <!-- REWARDS PAGE -->
   <div class="page" id="page-rewards">
     <div id="reward-content"><div class="loading">Loading...</div></div>
   </div>
 
-  <!-- ADMIN PAGE -->
-  <div class="page" id="page-admin">
-    <div class="tab-btns">
-      <button class="tab-btn active" id="atab-create" onclick="switchAdminTab('create')">Add User</button>
-      <button class="tab-btn" id="atab-users" onclick="switchAdminTab('users')">All Users</button>
-      <button class="tab-btn" id="atab-audit" onclick="switchAdminTab('audit')">Audit Log</button>
-    </div>
-
-    <!-- CREATE USER -->
-    <div id="admin-create">
-      <p class="section-label">Add Employee Account</p>
-      <div class="card">
-        <div class="form-row"><label>Full Name</label><input id="a-name" type="text" placeholder="e.g. Ramesh Kumar"/></div>
-        <div class="form-row"><label>Email</label><input id="a-email" type="email" placeholder="emp@company.com"/></div>
-        <div class="form-row"><label>Employee ID</label><input id="a-empid" type="text" placeholder="e.g. EMP-1042"/></div>
-        <div class="form-row"><label>Unit / Department</label>
-          <select id="a-unit">
-            <option value="">Select unit</option>
-            <option>Production Line A</option>
-            <option>Production Line B</option>
-            <option>Quality Control</option>
-            <option>Maintenance</option>
-            <option>Logistics</option>
-            <option>Safety</option>
-          </select>
-        </div>
-        <div class="form-row"><label>Role</label>
-          <select id="a-role">
-            <option value="operator">Operator (Shop Floor)</option>
-            <option value="manager">Manager / SIC / HOD</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div class="form-row"><label>Temporary Password</label><input id="a-pass" type="text" placeholder="Min 8 characters — share with employee"/></div>
-        <button class="btn-primary" onclick="createEmployee()">Create Account</button>
-      </div>
-    </div>
-
-    <!-- USERS LIST -->
-    <div id="admin-users" style="display:none">
-      <p class="section-label">All Users</p>
-      <div class="card" id="users-list"><div class="loading">Loading...</div></div>
-    </div>
-
-    <!-- AUDIT LOG -->
-    <div id="admin-audit" style="display:none">
-      <p class="section-label">System Audit Log</p>
-      <div class="card" id="audit-list"><div class="loading">Loading...</div></div>
-    </div>
+  <div class="page" id="page-leaderboard">
+    <div id="leaderboard-content"><div class="loading">Loading...</div></div>
   </div>
 
-  <!-- BOTTOM NAV (rebuilt per role) -->
-  <nav class="bottom-nav" id="bottom-nav"></nav>
+  <div class="page" id="page-admin">
+    <div id="admin-content"><div class="loading">Loading...</div></div>
+  </div>
+
+  <div class="page" id="page-learning">
+    <div id="learning-content"><div class="loading">Loading...</div></div>
+  </div>
+
+  <div class="bottom-nav" id="bottom-nav"></div>
 </div>
 
-<script>
-// ─── CONFIG ──────────────────────────────────────────────────
-// All API calls go to Cloudflare Pages Functions at /api/*
-const API = '';   // same origin — no CORS needed
+<script type="module">
+import { doLogin, doLogout, loadApp, initAuth } from './js/auth.js';
+window.doLogin = doLogin; window.doLogout = doLogout; window.loadApp = loadApp;
 
-// ─── STATE ───────────────────────────────────────────────────
-let authToken = localStorage.getItem('kh_token') || null;
-let currentUser = JSON.parse(localStorage.getItem('kh_user') || 'null');
+import { showPage } from './js/app.js';
+window.showPage = showPage;
 
-// Modal state
-let resetTargetId = null;
-let deleteTargetId = null;
-
-// ─── TOAST ───────────────────────────────────────────────────
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-// ─── API HELPER ──────────────────────────────────────────────
-async function apiFetch(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
-  const res = await fetch(API + path, { ...options, headers: { ...headers, ...(options.headers||{}) } });
-  const data = await res.json().catch(() => ({}));
-  return { ok: res.ok, status: res.status, data };
-}
-
-// ─── AUTH ────────────────────────────────────────────────────
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-err');
-  errEl.style.display = 'none';
-
-  if (!email || !pass) { showErr('Please enter email and password.'); return; }
-
-  const btn = document.getElementById('login-btn');
-  btn.disabled = true; btn.textContent = 'Signing in…';
-
-  const { ok, data } = await apiFetch('/api/auth', {
-    method: 'POST',
-    body: JSON.stringify({ email, password: pass })
-  });
-
-  btn.disabled = false; btn.textContent = 'Sign In';
-
-  if (!ok) { showErr(data.error || 'Login failed'); return; }
-
-  authToken = data.token;
-  currentUser = data.user;
-  localStorage.setItem('kh_token', authToken);
-  localStorage.setItem('kh_user', JSON.stringify(currentUser));
-
-  loadApp();
-}
-
-function showErr(msg) {
-  const el = document.getElementById('login-err');
-  el.textContent = msg; el.style.display = 'block';
-}
-
-async function doLogout() {
-  await apiFetch('/api/auth', { method: 'DELETE' });
-  authToken = null; currentUser = null;
-  localStorage.removeItem('kh_token');
-  localStorage.removeItem('kh_user');
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'flex';
-}
-
-function loadApp() {
-  if (!currentUser) return;
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('topbar-sub').textContent = `${currentUser.full_name} · ${currentUser.emp_id}`;
-
-  const pillEl = document.getElementById('role-pill');
-  pillEl.textContent = currentUser.role;
-  pillEl.className = `role-pill role-${currentUser.role.toLowerCase()}`;
-
-  buildNav(currentUser.role);
-  goTo(currentUser.role === 'operator' ? 'submit' : 'review');
-}
-
-// ─── NAV ─────────────────────────────────────────────────────
-function buildNav(role) {
-  const nav = document.getElementById('bottom-nav');
-  const tabs = [
-    { id:'submit',    icon:'<path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',    label:'Submit',    roles:['operator'] },
-    { id:'myideas',   icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/>',       label:'My Ideas',  roles:['operator','manager','admin'] },
-    { id:'review',    icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',label:'Review',roles:['manager','admin'] },
-    { id:'dashboard', icon:'<rect x="3" y="13" width="4" height="8"/><rect x="10" y="9" width="4" height="12"/><rect x="17" y="5" width="4" height="16"/>',label:'Dashboard',roles:['manager','admin','operator'] },
-    { id:'rewards',   icon:'<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',label:'Rewards',roles:['operator','manager','admin'] },
-    { id:'admin',     icon:'<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',            label:'Admin',     roles:['admin'] },
-  ];
-  nav.innerHTML = tabs
-    .filter(t => t.roles.includes(role))
-    .map(t => `
-      <div class="nav-item" id="nav-${t.id}" onclick="goTo('${t.id}')">
-        <svg viewBox="0 0 24 24">${t.icon}</svg>
-        <span>${t.label}</span>
-      </div>`).join('');
-}
-
-function goTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const pg = document.getElementById('page-' + page);
-  if (pg) pg.classList.add('active');
-  const nv = document.getElementById('nav-' + page);
-  if (nv) nv.classList.add('active');
-  window.scrollTo(0, 0);
-  if (page === 'submit')    loadManagers();
-  if (page === 'myideas')   renderMyIdeas();
-  if (page === 'review')    renderReview();
-  if (page === 'dashboard') renderDashboard();
-  if (page === 'rewards')   renderRewards();
-  if (page === 'admin')     { switchAdminTab('create'); }
-}
-
-// ─── SUBMIT HELPERS ──────────────────────────────────────────
-function onFileChosen(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { toast('⚠ File too large (max 5MB)'); input.value = ''; return; }
-  document.getElementById('f-file-name').textContent = file.name;
-  document.getElementById('file-chosen-name').style.display = 'block';
-}
-
-function clearFile() {
-  document.getElementById('f-file').value = '';
-  document.getElementById('file-chosen-name').style.display = 'none';
-  document.getElementById('f-file-name').textContent = '';
-}
-
-async function onTypeChange(val) {
-  const susa = val === 'SUSA Hazard';
-  document.getElementById('susa-dashboard').style.display = susa ? 'block' : 'none';
-  if (susa) await loadSusaStats();
-}
-
-async function loadSusaStats() {
-  const { ok, data } = await apiFetch('/api/submissions');
-  if (!ok) return;
-  const all = (data.submissions || []).filter(s => s.type === 'SUSA Hazard');
-  const total = all.length;
-  const open = all.filter(s => s.status === 'Pending').length;
-  const resolved = all.filter(s => s.status === 'Approved').length;
-  const rate = total ? Math.round((resolved / total) * 100) : 0;
-  document.getElementById('susa-total').textContent = total;
-  document.getElementById('susa-open').textContent = open;
-  document.getElementById('susa-resolved').textContent = resolved;
-  document.getElementById('susa-rate').textContent = rate + '%';
-}
-
-async function loadManagers() {
-  const sel = document.getElementById('f-approver');
-  // fetch all users — only works if role allows; for operator we add a dedicated endpoint
-  const { ok, data } = await apiFetch('/api/managers');
-  if (!ok || !data.managers || !data.managers.length) {
-    sel.innerHTML = '<option value="">No managers found</option>';
-    return;
-  }
-  sel.innerHTML = '<option value="">Select approver...</option>' +
-    data.managers.map(m => `<option value="${esc(m.id)}">${esc(m.full_name)} (${esc(m.unit)})</option>`).join('');
-}
-
-// ─── SUBMIT ──────────────────────────────────────────────────
-async function submitIdea() {
-  const type = document.getElementById("f-type").value;
-  const title = document.getElementById("f-title").value.trim();
-  const desc = document.getElementById("f-desc").value.trim();
-  const saving = document.getElementById("f-saving").value;
-  const approver = document.getElementById("f-approver").value;
-
-  if (!type ||!title ||!desc) { toast("⚠ Please fill all required fields"); return; }
-  if (!approver) { toast("⚠ Please select an approver"); return; }
-
-  const typeMap = {
-    "Kaizen (Process Improvement)": "kaizen",
-    "QC Project": "quality",
-    "SUSA Hazard": "safety",
-    "Safety / Hazard": "safety",
-    "Cost Saving": "kaizen"
-  };
-  const apiType = typeMap[type];
-  if (!apiType) { toast("⚠ Invalid type"); return; }
-
-  let payload = {};
-  if (apiType === "kaizen") {
-    payload = {
-      title,
-      current_state: "See description",
-      proposed_state: desc,
-      expected_benefit: saving? `Save ₹${saving}/month` : ""
-    };
-  } else if (apiType === "safety") {
-    payload = {
-      hazard_description: title,
-      location: "See description",
-      risk_level: "Medium",
-      suggested_action: desc
-    };
-  } else if (apiType === "quality") {
-    payload = {
-      defect_description: title,
-      part_number: "",
-      quantity: 1,
-      root_cause: "See description",
-      corrective_action: desc
-    };
-  }
-
-  const { ok, data } = await apiFetch(`/api/submissions/${apiType}`, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-
-  if (!ok) { toast("Error: " + (data.error || "Failed")); return; }
-
-  document.getElementById("f-type").selectedIndex = 0;
-  ["f-title","f-desc","f-saving"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("f-approver").selectedIndex = 0;
-  document.getElementById("susa-dashboard").style.display = "none";
-  clearFile();
-  toast("✓ Idea submitted successfully!");
-  goTo("myideas");
-}
-
-// ─── MY IDEAS ────────────────────────────────────────────────
-async function renderMyIdeas() {
-  const el = document.getElementById("my-list");
-  el.innerHTML = "<div class=\"loading\">Loading...</div>";
-
-  const [kaizen, safety, quality] = await Promise.all([
-    apiFetch("/api/submissions/kaizen"),
-    apiFetch("/api/submissions/safety"),
-    apiFetch("/api/submissions/quality")
-  ]);
-
-  let subs = [];
-  if (kaizen.ok) subs = subs.concat(kaizen.data.submissions.map(s => ({...s, type: "Kaizen"})));
-  if (safety.ok) subs = subs.concat(safety.data.submissions.map(s => ({...s, type: "Safety", title: s.hazard_description, description: s.suggested_action})));
-  if (quality.ok) subs = subs.concat(quality.data.submissions.map(s => ({...s, type: "Quality", title: s.defect_description, description: s.corrective_action})));
-
-  subs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-
-  if (!subs.length) {
-    el.innerHTML = "<div class=\"empty\">No submissions yet.<br>Go submit your first idea!</div>";
-    return;
-  }
-
-  el.innerHTML = subs.map(s => `
-    <div class=\"sub-card ${s.status.toLowerCase().replace(/ /g, "-")}\">
-      <h4>${esc(s.title)}</h4>
-      <div class=\"sub-meta\">${esc(s.type)} · ${fmtDate(s.created_at)}</div>
-      ${currentUser.role!== "operator"? `<div class=\"sub-meta\" style=\"color:var(--navy);font-weight:600\">${esc(s.full_name)} (${esc(s.emp_id)})</div>` : ""}
-      <div class=\"sub-excerpt\">${esc(s.description || s.proposed_state || s.expected_benefit || "").substring(0,120)}</div>
-      <div class=\"sub-footer\">
-        <span class=\"badge badge-${s.status.toLowerCase().replace(/ /g, "-")}\">${s.status}</span>
-        ${s.expected_benefit? `<span class=\"saving-chip\">${esc(s.expected_benefit)}</span>` : ""}
-      </div>
-      ${s.feedback? `<div class=\"feedback-text\">Feedback: ${esc(s.feedback)}</div>` : ""}
-    </div>
-  `).join("");
-}
-
-// ─── REVIEW (manager/admin) ───────────────────────────────────
-
-async function reviewAction(apiType, id, status) {
-  const feedback = document.getElementById(`fb-${apiType}-${id}`)?.value.trim() || "";
-
-  const { ok, data } = await apiFetch(`/api/submissions/${apiType}/${id}/review`, {
-    method: "POST",
-    body: JSON.stringify({ status, feedback })
-  });
-
-  if (!ok) { toast("Error: " + (data.error || "Failed")); return; }
-
-  toast(status === "Approved"
-   ? `✓ Approved!`
-    : "↩ Returned to submitter");
-  renderReview();
-}
-
-// ─── DASHBOARD ───────────────────────────────────────────────
-async function renderDashboard() {
-  const { ok, data } = await apiFetch('/api/dashboard');
-  if (!ok || !data.stats) return;
-
-  const s = data.stats;
-  document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi-card"><div class="kpi-val">${s.total||0}</div><div class="kpi-label">Total Submissions</div></div>
-    <div class="kpi-card"><div class="kpi-val">${s.approved||0}</div><div class="kpi-label">Approved</div></div>
-    <div class="kpi-card"><div class="kpi-val">${s.pending||0}</div><div class="kpi-label">Pending</div></div>
-    <div class="kpi-card"><div class="kpi-val">₹${((s.total_saving||0)/1000).toFixed(1)}K</div><div class="kpi-label">Monthly Savings</div></div>
-  `;
-
-  const lb = document.getElementById('leaderboard');
-  const sorted = data.leaderboard || [];
-  if (!sorted.length) { lb.innerHTML = '<div class="empty" style="padding:16px">No approved ideas yet.</div>'; return; }
-  lb.innerHTML = sorted.map((e, i) => `
-    <div class="lb-row">
-      <div class="lb-rank ${i<3?'top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
-      <div class="avatar">${initials(e.full_name)}</div>
-      <div class="lb-info"><h4>${esc(e.full_name)}</h4><p>${e.idea_count} idea${e.idea_count>1?'s':''}</p></div>
-      <div class="lb-pts">${e.total_points} pts</div>
-    </div>
-  `).join('');
-}
-
-// ─── REWARDS ─────────────────────────────────────────────────
-async function renderRewards() {
-  const el = document.getElementById('reward-content');
-  const { ok, data } = await apiFetch('/api/dashboard');
-  if (!ok) { el.innerHTML = '<div class="empty">Error loading rewards.</div>'; return; }
-
-  const rewards = data.my_rewards;
-  const total = rewards?.total_points || 0;
-  const items = rewards?.items || [];
-
-  el.innerHTML = `
-    <div class="reward-hero">
-      <div class="emp-name">${esc(currentUser.full_name)}</div>
-      <div class="pts-big">${total}</div>
-      <div class="pts-label">Reward Points Earned · ${esc(currentUser.emp_id)}</div>
-    </div>
-    ${items.length ? `
-    <div class="card">
-      <p class="section-label" style="margin-bottom:12px">Points Ledger</p>
-      ${items.map(s=>`
-        <div class="ledger-row">
-          <div>
-            <div style="font-size:13px;font-weight:500">${esc(s.title)}</div>
-            <div style="font-size:11px;color:var(--muted)">${fmtDate(s.created_at)} · ${esc(s.type)}</div>
-          </div>
-          <div class="ledger-pts">+${s.points}</div>
-        </div>
-      `).join('')}
-    </div>` : '<div class="empty">No approved ideas yet.<br>Submit ideas to earn points!</div>'}
-  `;
-}
-
-// ─── ADMIN TABS ──────────────────────────────────────────────
-function switchAdminTab(tab) {
-  ['create','users','audit'].forEach(t => {
-    document.getElementById('admin-' + t).style.display = t === tab ? 'block' : 'none';
-    document.getElementById('atab-' + t).classList.toggle('active', t === tab);
-  });
-  if (tab === 'users')  renderAdmin();
-  if (tab === 'audit')  renderAudit();
-}
-
-// ─── ADMIN — CREATE USER ─────────────────────────────────────
-async function createEmployee() {
-  const name  = document.getElementById('a-name').value.trim();
-  const email = document.getElementById('a-email').value.trim();
-  const empid = document.getElementById('a-empid').value.trim();
-  const unit  = document.getElementById('a-unit').value;
-  const role  = document.getElementById('a-role').value;
-  const pass  = document.getElementById('a-pass').value;
-  if (!name||!email||!empid||!unit||!pass) { toast('⚠ Fill all fields'); return; }
-  if (pass.length < 8) { toast('⚠ Password must be 8+ characters'); return; }
-
-  const { ok, data } = await apiFetch('/api/users', {
-    method: 'POST',
-    body: JSON.stringify({ full_name: name, email, emp_id: empid, unit, role, password: pass })
-  });
-
-  if (!ok) { toast('Error: ' + (data.error || 'Failed')); return; }
-  toast(`✓ Account created for ${name}`);
-  ['a-name','a-email','a-empid','a-pass'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('a-unit').selectedIndex = 0;
-}
-
-// ─── ADMIN — LIST USERS ──────────────────────────────────────
-async function renderAdmin() {
-  const el = document.getElementById('users-list');
-  el.innerHTML = '<div class="loading">Loading...</div>';
-
-  const { ok, data } = await apiFetch('/api/users');
-  if (!ok) { el.innerHTML = '<div class="empty">Error loading users.</div>'; return; }
-  const users = data.users || [];
-  if (!users.length) { el.innerHTML = '<div class="empty">No users yet.</div>'; return; }
-
-  el.innerHTML = users.map(u => `
-    <div class="user-row">
-      <div class="avatar">${initials(u.full_name)}</div>
-      <div class="user-info">
-        <h4>${esc(u.full_name)}</h4>
-        <p>${esc(u.emp_id)} · ${esc(u.unit||'—')} · ${esc(u.email)}</p>
-      </div>
-      <div class="user-actions">
-        <button class="btn-sm btn-sm-reset" onclick="openResetModal('${u.id}','${esc(u.full_name)}')">🔑</button>
-        ${u.id !== currentUser.id ? `<button class="btn-sm btn-sm-del" onclick="openDeleteModal('${u.id}','${esc(u.full_name)}')">🗑</button>` : ''}
-      </div>
-    </div>
-  `).join('');
-}
-
-// ─── ADMIN — AUDIT LOG ───────────────────────────────────────
-async function renderAudit() {
-  const el = document.getElementById('audit-list');
-  el.innerHTML = '<div class="loading">Loading...</div>';
-
-  const { ok, data } = await apiFetch('/api/audit?limit=50');
-  if (!ok) { el.innerHTML = '<div class="empty">Error loading audit log.</div>'; return; }
-  const logs = data.logs || [];
-  if (!logs.length) { el.innerHTML = '<div class="empty">No activity recorded yet.</div>'; return; }
-
-  const actionColors = {
-    LOGIN:'#2E7DD1', LOGOUT:'#6B7BAA',
-    SUBMIT_IDEA:'#0f6e4a', APPROVE_IDEA:'#0f6e4a', REJECT_IDEA:'#991b1b',
-    CREATE_USER:'#856404', DELETE_USER:'#991b1b', RESET_PASSWORD:'#F5A623',
-  };
-
-  el.innerHTML = logs.map(l => {
-    let detail = '';
-    try {
-      const d = JSON.parse(l.detail || '{}');
-      detail = Object.entries(d).map(([k,v])=>`${k}: ${v}`).join(' · ');
-    } catch { detail = l.detail || ''; }
-
-    return `
-    <div class="audit-row">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="audit-action" style="color:${actionColors[l.action]||'var(--navy)'}">${l.action}</span>
-        <span style="font-size:11px;color:var(--muted)">by ${esc(l.actor_name)}</span>
-      </div>
-      ${detail ? `<div class="audit-meta">${esc(detail)}</div>` : ''}
-      <div class="audit-meta">${fmtDateTime(l.created_at)}</div>
-    </div>
-  `}).join('');
-}
-
-// ─── RESET PASSWORD MODAL ─────────────────────────────────────
-function openResetModal(userId, name) {
-  resetTargetId = userId;
-  document.getElementById('reset-modal-name').textContent = `Setting new password for: ${name}`;
-  document.getElementById('reset-new-pass').value = '';
-  document.getElementById('reset-modal').classList.add('open');
-}
-function closeResetModal() {
-  resetTargetId = null;
-  document.getElementById('reset-modal').classList.remove('open');
-}
-async function confirmReset() {
-  const newPass = document.getElementById('reset-new-pass').value;
-  if (!newPass || newPass.length < 8) { toast('⚠ Password must be 8+ characters'); return; }
-
-  const { ok, data } = await apiFetch('/api/users', {
-    method: 'PUT',
-    body: JSON.stringify({ user_id: resetTargetId, new_password: newPass })
-  });
-  if (!ok) { toast('Error: ' + (data.error || 'Failed')); return; }
-  toast('✓ ' + (data.message || 'Password reset'));
-  closeResetModal();
-}
-
-// ─── DELETE USER MODAL ────────────────────────────────────────
-function openDeleteModal(userId, name) {
-  deleteTargetId = userId;
-  document.getElementById('delete-modal-name').textContent = `This will permanently delete: ${name}. This cannot be undone.`;
-  document.getElementById('delete-modal').classList.add('open');
-}
-function closeDeleteModal() {
-  deleteTargetId = null;
-  document.getElementById('delete-modal').classList.remove('open');
-}
-async function confirmDelete() {
-  const { ok, data } = await apiFetch('/api/users?id=' + deleteTargetId, { method: 'DELETE' });
-  if (!ok) { toast('Error: ' + (data.error || 'Failed')); return; }
-  toast('✓ User deleted');
-  closeDeleteModal();
-  renderAdmin();
-}
-
-// ─── UTILS ───────────────────────────────────────────────────
-function esc(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function initials(name) {
-  return (name||'').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-}
-function fmtDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-}
-function fmtDateTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-
-// ─── BOOT ────────────────────────────────────────────────────
-if (authToken && currentUser) {
-  // Validate token is still good by loading app
-  // A failed API call will show appropriate errors
-  loadApp();
-}
+initAuth();
 </script>
 </body>
 </html>
-<script id="single-review-fix">
-async function reviewAction(apiType, id, status) {
-  const feedback = document.getElementById('fb-' + apiType + '-' + id).value.trim() || "";
-  const res = await apiFetch('/api/submissions/' + apiType + '/' + id + '/review', {
-    method: "POST", body: JSON.stringify({ status, feedback })
-  });
-  if (!res.ok) { toast("DB Error: " + (res.data.error || "Check console")); console.error(res.data); return; }
-  toast(status === "Approved" ? "✓ Approved!" : "↩ Returned");
-  renderReview();
-}
-</script>
-<script id="final-review-fix">
-  try {
-    const [kaizen, safety, quality] = await Promise.all([
-      apiFetch("/api/submissions/kaizen"),
-      apiFetch("/api/submissions/safety"),
-      apiFetch("/api/submissions/quality")
-    ]);
-    let subs = [];
-    if (kaizen.ok) subs = subs.concat(kaizen.data.submissions.map(s => ({...s, apiType: "kaizen", displayType: "Kaizen", title: s.title, desc: s.proposed_state || s.current_state})));
-    if (safety.ok) subs = subs.concat(safety.data.submissions.map(s => ({...s, apiType: "safety", displayType: "Safety", title: s.hazard_description, desc: s.suggested_action})));
-    if (quality.ok) subs = subs.concat(quality.data.submissions.map(s => ({...s, apiType: "quality", displayType: "Quality", title: s.defect_description, desc: s.corrective_action})));
-    subs = subs.filter(s => s.status === "Pending" || s.status === "Submitted");
-    subs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-    if (!subs.length) { el.innerHTML = '<div class="empty">✓ All clear!</div>'; return; }
-    el.innerHTML = subs.map(s => {
-      return '<div class="sub-card">' +
-        '<h4>' + esc(s.title) + '</h4>' +
-        '<div class="sub-meta"><b>' + esc(s.full_name) + '</b> (' + esc(s.emp_id) + ')</div>' +
-        '<textarea id="fb-' + s.apiType + '-' + s.id + '" placeholder="Optional feedback..." rows="2"></textarea>' +
-        '<div class="action-row">' +
-          '<button onclick="reviewAction(\'' + s.apiType + '\', ' + s.id + ', \'Approved\')">✓ Approve</button>' +
-          '<button onclick="reviewAction(\'' + s.apiType + '\', ' + s.id + ', \'Rejected\')">✗ Return</button>' +
-        '</div></div>';
-    }).join("");
-  } catch(e) { console.error(e); el.innerHTML = '<div class="empty">Error loading</div>'; }
-}
-async function reviewAction(apiType, id, status) {
-  const feedback = document.getElementById('fb-' + apiType + '-' + id).value.trim() || "";
-  const res = await apiFetch('/api/submissions/' + apiType + '/' + id + '/review', {
-    method: "POST", body: JSON.stringify({ status, feedback })
-  });
-  if (!res.ok) { toast("DB Error: " + (res.data.error || "Check console")); console.error(res.data); return; }
-  toast(status === "Approved"? "✓ Approved!" : "↩ Returned");
-  renderReview();
-}
-</script>

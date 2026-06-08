@@ -1,0 +1,18 @@
+# Node
+node_modules/
+
+# Cloudflare
+.wrangler/
+
+# Local databases
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Temp files
+.tmp*
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store

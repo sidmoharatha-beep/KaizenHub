@@ -1,0 +1,2 @@
+@echo off
+curl -s -X POST "https://c47fa617.kaizenhub.pages.dev/api/behavioral/evaluate" -H "Content-Type: application/json" -H "Authorization: Bearer 9a2823c2-7002-4a3c-845e-07762a0157be" -d "{\"user_id\":5,\"selected_hr_id\":3,\"month\":6,\"year\":2026,\"responsiveness\":2,\"preventive_value\":2,\"ownership\":3,\"attitude\":2,\"communication\":2,\"problem_solving\":2,\"teamwork\":3,\"standards_safety\":2,\"comment\":\"Good teamwork and safety awareness this month\"}"

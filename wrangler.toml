@@ -5,4 +5,8 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "kaizenhub-db"
-database_id = "d3ceaf74-7d29-41d0-b8f6-672903a978bf"
+database_id = "ab01d11e-2b62-4429-abfa-d4eda949c74f"
+
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "kaizenhub-attachments"

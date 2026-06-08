@@ -1,70 +1,123 @@
-import { json, err, getSession } from './_utils.js';
+import { json, err } from './_utils.js';
 
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}
+export async function onRequestGet({ request, env, data }) {
+  const user = data.user;
 
-// GET /api/dashboard — aggregated stats + leaderboard
-export async function onRequestGet({ request, env }) {
-  const session = await getSession(request, env);
-  if (!session) return err('Unauthorized', 401);
+  try {
+    const url = new URL(request.url);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '10'), 50);
 
-  // KPI counts
-  const stats = await env.DB.prepare(`
-    SELECT
-      COUNT(*) as total,
-      SUM(CASE WHEN status='Approved' THEN 1 ELSE 0 END) as approved,
-      SUM(CASE WHEN status='Pending'  THEN 1 ELSE 0 END) as pending,
-      SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected,
-      SUM(CASE WHEN status='Approved' THEN saving ELSE 0 END) as total_saving
-    FROM submissions
-  `).first();
+    const queries = [];
 
-  // Leaderboard (top 10 by points)
-  const { results: leaderboard } = await env.DB.prepare(`
-    SELECT emp_id, full_name, SUM(points) as total_points, COUNT(*) as idea_count
-    FROM submissions
-    WHERE status = 'Approved'
-    GROUP BY emp_id, full_name
-    ORDER BY total_points DESC
-    LIMIT 10
-  `).all();
+    // 1. Module KPI counts
+    queries.push(env.DB.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status='Approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN status='Submitted' THEN 1 ELSE 0 END) as pending,
+        SUM(reward_points) as points
+      FROM safety_reports${user.role === 'Manager' ? ' WHERE department_id = ?' : ''}
+    `).bind(...(user.role === 'Manager' ? [user.department_id] : [])));
 
-  // My rewards (for operator view)
-  let my_rewards = null;
-  if (session.role === 'operator') {
-    const { results: myData } = await env.DB.prepare(`
-      SELECT id, title, type, points, created_at
-      FROM submissions
-      WHERE user_id = ? AND status = 'Approved'
-      ORDER BY created_at DESC
-    `).bind(session.uid).all();
-    const total_points = myData.reduce((a, b) => a + (b.points || 0), 0);
-    my_rewards = { total_points, items: myData };
+    queries.push(env.DB.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status='Approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN status='Submitted' THEN 1 ELSE 0 END) as pending,
+        SUM(reward_points) as points
+      FROM quality_reports${user.role === 'Manager' ? ' WHERE department_id = ?' : ''}
+    `).bind(...(user.role === 'Manager' ? [user.department_id] : [])));
+
+    queries.push(env.DB.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status='Closed' THEN 1 ELSE 0 END) as closed,
+        SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected
+      FROM kaizen_ideas${user.role === 'Manager' ? ' WHERE department_id = ?' : ''}
+    `).bind(...(user.role === 'Manager' ? [user.department_id] : [])));
+
+    queries.push(env.DB.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status='Closed' THEN 1 ELSE 0 END) as closed,
+        SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected
+      FROM quality_circle_projects${user.role === 'Manager' ? ' WHERE department_id = ?' : ''}
+    `).bind(...(user.role === 'Manager' ? [user.department_id] : [])));
+
+    queries.push(env.DB.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status='Reward Released' THEN 1 ELSE 0 END) as released,
+        SUM(CASE WHEN status='HR Approval' THEN 1 ELSE 0 END) as pending
+      FROM behavioral_evaluations${user.role === 'Manager' ? ' WHERE evaluator_id = ? OR EXISTS(SELECT 1 FROM users u WHERE u.id = behavioral_evaluations.user_id AND u.department_id = ?)' : ''}
+    `).bind(...(user.role === 'Manager' ? [user.id, user.department_id] : [])));
+
+    const [
+      safetyRes, qualityRes, kaizenRes, qcRes, behavioralRes
+    ] = await env.DB.batch(queries);
+
+    // 2. Overall leaderboard
+    const { results: leaderboard } = await env.DB.prepare(`
+      SELECT lc.points, lc.rank, u.name, u.employee_id, d.name as department_name
+      FROM leaderboard_cache lc
+      JOIN users u ON lc.user_id = u.id
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE lc.category = 'overall' AND lc.period = 'all_time'
+      ORDER BY lc.points DESC LIMIT ?
+    `).bind(limit).all();
+
+    // 3. Pending reviews for Manager/Admin
+    let pendingReviews = null;
+    if (['Manager', 'Admin'].includes(user.role)) {
+      const { results: safetyPending } = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM safety_reports WHERE status = 'Submitted'
+        ${user.role === 'Manager' ? 'AND department_id = ?' : ''}
+      `).bind(...(user.role === 'Manager' ? [user.department_id] : [])).all();
+
+      const { results: qualityPending } = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM quality_reports WHERE status = 'Submitted'
+        ${user.role === 'Manager' ? 'AND department_id = ?' : ''}
+      `).bind(...(user.role === 'Manager' ? [user.department_id] : [])).all();
+
+      const { results: kaizenPending } = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM kaizen_ideas WHERE status = 'Submitted'
+        AND approver_id = ?
+      `).bind(user.id).all();
+
+      const { results: behavioralPending } = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM behavioral_evaluations WHERE status = 'HR Approval'
+      `).all();
+
+      pendingReviews = {
+        safety: safetyPending?.[0]?.count || 0,
+        quality: qualityPending?.[0]?.count || 0,
+        kaizen: kaizenPending?.[0]?.count || 0,
+        behavioral: behavioralPending?.[0]?.count || 0,
+        total: (safetyPending?.[0]?.count || 0) + (qualityPending?.[0]?.count || 0) +
+               (kaizenPending?.[0]?.count || 0) + (behavioralPending?.[0]?.count || 0)
+      };
+    }
+
+    // 4. Recent activity
+    const { results: recentActivity } = await env.DB.prepare(`
+      SELECT at.*, u.name as actor_name
+      FROM audit_trail at
+      JOIN users u ON at.user_id = u.id
+      ${user.role === 'Manager' ? 'WHERE at.user_id = ?' : ''}
+      ORDER BY at.created_at DESC LIMIT 10
+    `).bind(...(user.role === 'Manager' ? [user.id] : [])).all();
+
+    return json({
+      kpi: {
+        safety: safetyRes.results?.[0] || { total: 0, approved: 0, pending: 0, points: 0 },
+        quality: qualityRes.results?.[0] || { total: 0, approved: 0, pending: 0, points: 0 },
+        kaizen: kaizenRes.results?.[0] || { total: 0, closed: 0, rejected: 0 },
+        qc: qcRes.results?.[0] || { total: 0, closed: 0, rejected: 0 },
+        behavioral: behavioralRes.results?.[0] || { total: 0, released: 0, pending: 0 }
+      },
+      leaderboard: leaderboard || [],
+      pending_reviews: pendingReviews,
+      recent_activity: recentActivity || [],
+      role: user.role,
+      department_id: user.department_id
+    });
+
+  } catch (e) {
+    return err('Dashboard error: ' + e.message, 500);
   }
-
-  // Recent activity (for admin/manager)
-  let recent_activity = null;
-  if (['admin', 'manager'].includes(session.role)) {
-    const { results: activity } = await env.DB.prepare(`
-      SELECT actor_name, action, target_type, detail, created_at
-      FROM audit_log
-      ORDER BY created_at DESC
-      LIMIT 20
-    `).all();
-    recent_activity = activity;
-  }
-
-  return json({
-    stats,
-    leaderboard: leaderboard || [],
-    my_rewards,
-    recent_activity,
-  });
 }

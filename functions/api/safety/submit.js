@@ -1,62 +1,132 @@
-import { json, err } from '../_utils.js';
-import { auditLog } from '../_utils.js';
+import { json, err, auditLog, getClientIP } from '../_utils.js';
+import { computeHash, isDuplicate } from '../../lib/dedup.js';
+import { uploadAttachment } from '../../lib/upload.js';
+import { notify } from '../../lib/notifications.js';
 
+// POST /api/safety/submit — Create a safety report
 export async function onRequestPost({ request, env, data }) {
-  const user = data.user; // from middleware
+  const user = data.user;
+
   let body;
-  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+  const contentType = request.headers.get('content-type') || '';
 
-  const { subcategory, title, location, description, consequence, likelihood, immediate_action, incident_date } = body;
-  
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await request.formData();
+    body = Object.fromEntries(formData.entries());
+    const file = formData.get('attachment');
+    if (file && file.size > 0) {
+      try {
+        body.attachment_url = await uploadAttachment(env, file, 'safety');
+      } catch (e) {
+        return err(e.message, 400);
+      }
+    }
+  } else {
+    try { body = await request.json(); } catch {
+      return err('Invalid JSON', 400);
+    }
+  }
+
+  const { subcategory, title, location, department_id, approver_id, description, consequence, likelihood, immediate_action, incident_date } = body;
+
   // Validation
-  if (!subcategory ||!title ||!location ||!description ||!consequence ||!likelihood ||!incident_date) {
-    return err('Missing required fields');
+  if (!subcategory || !['Hazard', 'Near Miss', 'SUSA'].includes(subcategory)) {
+    return err('subcategory must be Hazard, Near Miss, or SUSA', 400);
   }
-  if (!['Hazard','Near Miss','SUSA'].includes(subcategory)) {
-    return err('Invalid subcategory');
-  }
-  if (consequence < 1 || consequence > 5 || likelihood < 1 || likelihood > 5) {
-    return err('Consequence and Likelihood must be 1-5');
+  if (!title || title.trim().length < 3) return err('Title is required (min 3 chars)', 400);
+  if (!location) return err('Location is required', 400);
+  if (!description) return err('Description is required', 400);
+  if (!incident_date) return err('Incident date is required', 400);
+
+  const cons = parseInt(consequence);
+  const lik = parseInt(likelihood);
+  if (!cons || cons < 1 || cons > 5) return err('Consequence must be 1-5', 400);
+  if (!lik || lik < 1 || lik > 5) return err('Likelihood must be 1-5', 400);
+
+  const deptId = parseInt(department_id) || user.department_id;
+  const approverId = parseInt(approver_id) || user.manager_id;
+
+  // Duplicate detection via content hash
+  const hash = await computeHash(`${title}|${description}|${location}`);
+  if (await isDuplicate(env, 'safety_reports', hash, user.id)) {
+    return err('A similar safety report was already submitted in the last 30 days', 409);
   }
 
-  // 1. Check 5/month limit for approved reports
-  const thisMonth = new Date().toISOString().slice(0,7);
-  const { count } = await env.DB.prepare(`
-    SELECT COUNT(*) as count FROM safety_reports 
-    WHERE user_id =? AND status = 'Approved' AND strftime('%Y-%m', created_at) =?
-  `).bind(user.id, thisMonth).first();
-  
-  if (count >= 5) return err('Max 5 approved safety reports per month reached', 400);
-  
-  // 2. Duplicate detection: same title + location in 30 days
-  const dup = await env.DB.prepare(`
-    SELECT id FROM safety_reports 
-    WHERE title =? AND location =? AND created_at > datetime('now', '-30 days')
-  `).bind(title.trim(), location.trim()).first();
-  
-  if (dup) return err('Duplicate report found in last 30 days', 400);
-  
-  // 3. Calculate reward points
-  const riskScore = consequence * likelihood;
-  const reward = riskScore >= 10 ? 15 : riskScore >= 5 ? 10 : 5;
-  
-  // 4. Insert
-  const result = await env.DB.prepare(`
-    INSERT INTO safety_reports 
-    (user_id, subcategory, title, location, department_id, description, consequence, likelihood, immediate_action, incident_date, reward_points) 
-    VALUES (?,?,?,?,?,?,?,?,?,?,?)
-  `).bind(
-    user.id, subcategory, title.trim(), location.trim(), user.department_id, 
-    description.trim(), consequence, likelihood, immediate_action || '', incident_date, 0
-  ).run();
-  
-  const reportId = result.meta.last_row_id;
-  const ip = request.headers.get('CF-Connecting-IP') || '';
-  await auditLog(env, user, 'SUBMIT', 'safety', reportId, body, ip);
-  
-  return json({ 
-    id: reportId, 
-    message: 'Safety report submitted. Pending manager review.',
-    potential_reward: reward
-  });
+  try {
+    const result = await env.DB.prepare(`
+      INSERT INTO safety_reports (
+        user_id, subcategory, title, location, department_id, description,
+        consequence, likelihood, immediate_action, attachment_url,
+        incident_date, content_hash, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted')
+    `).bind(
+      user.id, subcategory, title.trim(), location.trim(), deptId,
+      description.trim(), cons, lik, immediate_action || null,
+      body.attachment_url || null, incident_date, hash
+    ).run();
+
+    const reportId = result.meta.last_row_id;
+
+    // Notify the selected approver
+    if (approverId) {
+      await notify(env, {
+        userId: approverId,
+        type: 'submission_received',
+        title: 'New Safety Report',
+        message: `${user.name} submitted a ${subcategory} report: "${title}"`,
+        entityType: 'safety_report',
+        entityId: reportId
+      });
+    }
+
+    await auditLog(env, user, 'safety_submit', 'safety_report', reportId, { subcategory, title }, getClientIP(request));
+
+    return json({
+      id: reportId,
+      risk_score: cons * lik,
+      message: 'Safety report submitted successfully. Pending manager review.'
+    }, 201);
+
+  } catch (e) {
+    return err('Database error: ' + e.message, 500);
+  }
+}
+
+// GET /api/safety/submit — List own safety reports
+export async function onRequestGet({ request, env, data }) {
+  const user = data.user;
+  const url = new URL(request.url);
+  const status = url.searchParams.get('status');
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const perPage = Math.min(parseInt(url.searchParams.get('per_page') || '20'), 100);
+  const offset = (page - 1) * perPage;
+
+  let whereClause = 'user_id = ?';
+  const params = [user.id];
+  if (status) {
+    whereClause += ' AND status = ?';
+    params.push(status);
+  }
+
+  try {
+    const countResult = await env.DB.prepare(
+      `SELECT COUNT(*) as total FROM safety_reports WHERE ${whereClause}`
+    ).bind(...params).first();
+
+    const { results } = await env.DB.prepare(`
+      SELECT * FROM safety_reports WHERE ${whereClause}
+      ORDER BY created_at DESC LIMIT ? OFFSET ?
+    `).bind(...params, perPage, offset).all();
+
+    return json({
+      submissions: results,
+      pagination: {
+        page, per_page: perPage,
+        total: countResult?.total || 0,
+        total_pages: Math.ceil((countResult?.total || 0) / perPage)
+      }
+    });
+  } catch (e) {
+    return err('Database error: ' + e.message, 500);
+  }
 }

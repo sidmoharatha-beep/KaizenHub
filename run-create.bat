@@ -1,0 +1,2 @@
+@echo off
+curl -s -X POST "https://2fb0cafe.kaizenhub.pages.dev/api/users" -H "Content-Type: application/json" -H "Authorization: Bearer e44527ff-5dcf-4bf0-ad1a-97d4744e4cc2" -d "{\"employee_id\":\"EMP99001\",\"full_name\":\"Test Worker\",\"name\":\"testworker\",\"email\":\"testworker@tvs-e.in\",\"password\":\"Test@1234\",\"role_name\":\"Operator\",\"department_id\":1,\"manager_id\":1,\"designation\":\"Operator\",\"section\":\"Shop Floor B\"}"
