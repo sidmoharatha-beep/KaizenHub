@@ -25,6 +25,7 @@ export const ROUTE_PERMISSIONS = {
   '/api/qc/members': ['Operator', 'SIC', 'Manager', 'Admin'],
   '/api/behavioral/evaluate': ['SIC', 'Manager', 'Admin'],
   '/api/behavioral/approve': ['HR', 'Admin'],
+};
   '/api/rewards': ['Operator', 'SIC', 'Manager', 'HR', 'QC Panel Member', 'Admin'],
   '/api/leaderboard': ['Operator', 'SIC', 'Manager', 'HR', 'QC Panel Member', 'Admin'],
   '/api/notifications': ['Operator', 'SIC', 'Manager', 'HR', 'QC Panel Member', 'Admin'],

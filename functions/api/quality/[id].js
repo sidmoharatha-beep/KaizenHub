@@ -1,5 +1,5 @@
 import { json } from '../_utils.js';
-export async function onRequestDelete({ request, env }) {
+export const onRequestDelete = async ({ request, env }) => {
   const segments = new URL(request.url).pathname.split('/');
   const id = parseInt(segments.pop());
   if (!id) return json({ error: 'Invalid id' }, 400);

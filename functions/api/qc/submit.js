@@ -2,7 +2,7 @@ import { json, err, auditLog, getClientIP } from '../_utils.js';
 import { notify, notifyMany } from '../../lib/notifications.js';
 
 // POST /api/qc/submit — Create a Quality Circle project
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   let body;

@@ -1,11 +1,11 @@
-export async function notify(env, { userId, type, title, message, entityType, entityId }) {
+export const notify = async (env, { userId, type, title, message, entityType, entityId }) => {
   await env.DB.prepare(`
     INSERT INTO notifications (user_id, type, title, message, entity_type, entity_id)
     VALUES (?, ?, ?, ?, ?, ?)
   `).bind(userId, type, title, message, entityType || null, entityId || null).run();
-}
+};
 
-export async function notifyMany(env, userIds, { type, title, message, entityType, entityId }) {
+export const notifyMany = async (env, userIds, { type, title, message, entityType, entityId }) => {
   const batch = userIds.map(uid =>
     env.DB.prepare(`
       INSERT INTO notifications (user_id, type, title, message, entity_type, entity_id)
@@ -15,14 +15,14 @@ export async function notifyMany(env, userIds, { type, title, message, entityTyp
   if (batch.length > 0) {
     await env.DB.batch(batch);
   }
-}
+};
 
-export async function getUnreadCount(env, userId) {
+export const getUnreadCount = async (env, userId) => {
   const result = await env.DB.prepare(
     `SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0`
   ).bind(userId).first();
   return result?.count || 0;
-}
+};
 
 export async function markRead(env, userId, notificationId) {
   if (notificationId === 'all') {

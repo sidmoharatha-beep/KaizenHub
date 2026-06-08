@@ -5,7 +5,7 @@ import { checkMonthlyCap } from '../../lib/dedup.js';
 import { notify } from '../../lib/notifications.js';
 
 // POST /api/quality/review — Approve or reject a quality report
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   let body;

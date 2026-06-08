@@ -2,7 +2,7 @@ import { json, err } from '../_utils.js';
 import { getWalletBalance } from '../../lib/rewards.js';
 
 // GET /api/rewards — Get wallet summary
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   const user = data.user;
   const url = new URL(request.url);
   // Admin/HR can view other users' wallets

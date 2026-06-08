@@ -5,7 +5,7 @@ import { notify, notifyMany } from '../../lib/notifications.js';
 import { isWithinWindow } from '../../lib/timeline.js';
 
 // POST /api/qc/screen — 12-step QC screening
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   // Timeline check
@@ -24,6 +24,7 @@ export async function onRequestPost({ request, env, data }) {
   if (!project_id) return err('project_id is required', 400);
   if (!Array.isArray(scores) || scores.length !== 12) {
     return err('Exactly 12 step scores are required', 400);
+  }
   }
 
   // Validate each score is 0-5

@@ -1,7 +1,7 @@
 import { json, err, paginate } from '../_utils.js';
 
 // GET /api/rewards/history — Paginated transaction history
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   const user = data.user;
   const url = new URL(request.url);
   const { page, perPage, offset } = paginate(url);
