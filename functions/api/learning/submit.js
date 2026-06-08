@@ -2,7 +2,7 @@ import { json, err, auditLog, getClientIP } from '../_utils.js';
 
 // POST /api/learning/submit — Admin upload training material (multipart)
 // Max 5MB per file. Stores to R2 under learning/ prefix.
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   if (user.role !== 'Admin') {

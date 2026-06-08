@@ -2,7 +2,7 @@ import { json, err } from '../_utils.js';
 import { markRead, getUnreadCount } from '../../lib/notifications.js';
 
 // GET /api/notifications — List notifications for current user
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   const user = data.user;
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') || '1');

@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/kaizen/[id] — Get single kaizen with full history
-export async function onRequestGet({ params, env, data }) {
+export const onRequestGet = async ({ params, env, data }) => {
   const user = data.user;
   const id = parseInt(params.id);
   if (!id) return err('Invalid kaizen ID', 400);

@@ -3,7 +3,7 @@ import { isWithinWindow } from '../../lib/timeline.js';
 import { notify } from '../../lib/notifications.js';
 
 // POST /api/kaizen/screen — Manager screens kaizen (29th-31st)
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   const user = data.user;
 
   // Timeline check

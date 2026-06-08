@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/learning — List active training materials (all authenticated users)
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   const user = data.user;
   const url = new URL(request.url);
   const category = url.searchParams.get('category');

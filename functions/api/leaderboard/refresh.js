@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // POST /api/leaderboard/refresh — Admin: force full leaderboard refresh
-export async function onRequestPost({ request, env, data }) {
+export const onRequestPost = async ({ request, env, data }) => {
   if (data.user.role !== 'Admin') return err('Admin only', 403);
 
   const url = new URL(request.url);
