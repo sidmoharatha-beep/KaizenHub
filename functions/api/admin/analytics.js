@@ -1,7 +1,7 @@
 import { json, err } from '../_utils.js';
 
 // GET /api/admin/analytics — Dashboard statistics
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   if (data.user.role !== 'Admin') return err('Admin only', 403);
 
   const url = new URL(request.url);
