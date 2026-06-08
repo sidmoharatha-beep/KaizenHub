@@ -16,7 +16,7 @@ async function getApprovedKaizenForUser() {
   return null;
 }
 
-export async function renderKaizenSubmit(container) {
+export const renderKaizenSubmit = async (container) => {
   let photoFile = null;
 
   let managers = [];

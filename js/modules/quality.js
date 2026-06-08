@@ -4,7 +4,7 @@ const ICONS = {
   quality: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>'
 };
 
-export async function renderQualitySubmit(container) {
+export const renderQualitySubmit = async (container) => {
   let photoFile = null;
   let managers = [];
   try {
@@ -23,7 +23,7 @@ export async function renderQualitySubmit(container) {
       <div class="module-header-text"><h3>Quality Report</h3><p>Report quality hazards or quality safety observations</p></div>
     </div>
     <form id="quality-form" class="card">
-      <div class="form-row"><label>Subcategory *</label>
+      <div class="form-row"><label>Subcategory *</label>`
         <select name="subcategory" required>
           <option value="">Select type...</option>
           <option value="Quality Hazard">Quality Hazard</option>

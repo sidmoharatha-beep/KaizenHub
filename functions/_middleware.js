@@ -1,6 +1,6 @@
 import { hasPermission } from './lib/rbac.js';
 
-export async function onRequest(context) {
+export const onRequest = async (context) => {
   const { request, env, next, data } = context;
   const url = new URL(request.url);
 

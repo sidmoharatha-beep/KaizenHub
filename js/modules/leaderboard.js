@@ -22,7 +22,7 @@ export async function renderLeaderboard() {
   `;
 }
 
-function renderLbRows(rows, me) {
+const renderLbRows = (rows, me) => {
   if (!rows?.length) return '<div class="empty">No leaderboard data yet</div>';
 
   let html = `
