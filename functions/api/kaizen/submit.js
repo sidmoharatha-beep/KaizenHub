@@ -4,7 +4,7 @@ import { notify } from '../../lib/notifications.js';
 import { isWithinWindow } from '../../lib/timeline.js';
 
 // POST /api/kaizen/submit — Stage 1: New kaizen OR Stage 2: Implementation evidence
-export const onRequestPost = async ({ request, env, data }) => {
+export async function onRequestPost({ request, env, data }) {
   const user = data.user;
 
   let body;
@@ -146,10 +146,12 @@ export const onRequestPost = async ({ request, env, data }) => {
     const result = await env.DB.prepare(`
       INSERT INTO kaizen_ideas (
         user_id, title, description, category, before_after, expected_impact,
+        tangible_benefits, intangible_benefits,
         department_id, attachment_url, approver_id, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted')
     `).bind(
       user.id, title.trim(), description.trim(), category.trim(), before_after.trim(), expected_impact.trim(),
+      body.tangible_benefits?.trim() || null, body.intangible_benefits?.trim() || null,
       deptId, attachment_url, approverId
     ).run();
 
