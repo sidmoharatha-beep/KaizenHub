@@ -16,6 +16,7 @@ export async function renderAdmin() {
       <button class="tab-btn" data-tab="users" onclick="switchAdminTab('users')" style="padding:8px 14px">Users</button>
       <button class="tab-btn" data-tab="create" onclick="switchAdminTab('create')" style="padding:8px 14px">Create User</button>
       <button class="tab-btn" data-tab="audit" onclick="switchAdminTab('audit')" style="padding:8px 14px">Audit Trail</button>
+      <button class="tab-btn" data-tab="data" onclick="switchAdminTab('data')" style="padding:8px 14px;background:#7f1d1d;color:#fff;border-radius:6px">🗑 Data Manager</button>
     </div>
     <div id="admin-analytics">
       <div class="card">
@@ -25,37 +26,18 @@ export async function renderAdmin() {
           <div><div style="font-size:28px;font-weight:800;color:var(--navy)">${summary.total_transactions||0}</div><div style="font-size:11px;color:var(--muted)">Transactions</div></div>
         </div>
       </div>
-      <div class="kpi-grid" id="admin-module-kpi"></div>
+      <div class="kpi-grid">${Object.entries(by_module||{}).map(([mod,stats])=>`<div class="kpi-card"><div class="kpi-val">${stats.total||0}</div><div class="kpi-label">${mod} Submissions</div></div>`).join('')}</div>
       <p class="section-label">Top Performers</p>
       ${renderTopPerformers(top_performers)}
       <p class="section-label">By Department</p>
-      <div class="card" id="admin-dept-list"></div>
+      <div class="card">${(by_department||[]).map(d=>`<div class="ledger-row"><span>${esc(d.department)}</span><span class="ledger-pts">${d.points||0} pts &#183; ${d.transactions||0}</span></div>`).join('')||'<div class="empty">No data</div>'}</div>
     </div>
     <div id="admin-users" style="display:none"></div>
     <div id="admin-create" style="display:none"></div>
     <div id="admin-audit" style="display:none"></div>
+    <div id="admin-data" style="display:none"></div>
   `;
   window.switchAdminTab = switchAdminTab;
-
-  // Populate module KPIs (avoid nested backticks for Edge compatibility)
-  const kpiGrid = document.getElementById('admin-module-kpi');
-  if (kpiGrid) {
-    kpiGrid.innerHTML = Object.entries(by_module || {}).map(function(entry) {
-      const mod = entry[0]; const stats = entry[1];
-      return '<div class="kpi-card"><div class="kpi-val">' + (stats.total || 0) + '</div><div class="kpi-label">' + mod + ' Submissions</div></div>';
-    }).join('');
-  }
-
-  // Populate department list
-  const deptList = document.getElementById('admin-dept-list');
-  if (deptList) {
-    const depts = by_department || [];
-    deptList.innerHTML = depts.length
-      ? depts.map(function(d) {
-          return '<div class="ledger-row"><span>' + esc(d.department) + '</span><span class="ledger-pts">' + (d.points || 0) + ' pts &middot; ' + (d.transactions || 0) + '</span></div>';
-        }).join('')
-      : '<div class="empty">No data</div>';
-  }
 }
 
 function renderTopPerformers(list) {
@@ -73,9 +55,11 @@ async function switchAdminTab(tab) {
   document.getElementById('admin-users').style.display = (tab==='users')?'':'none';
   document.getElementById('admin-create').style.display = (tab==='create')?'':'none';
   document.getElementById('admin-audit').style.display = (tab==='audit')?'':'none';
+  document.getElementById('admin-data').style.display = (tab==='data')?'':'none';
   if (tab==='users') await renderUserList();
   if (tab==='create') await renderCreateUser();
   if (tab==='audit') await loadAuditTrail();
+  if (tab==='data') await renderDataManager();
 }
 
 /* ---------- User List ---------- */
@@ -118,7 +102,7 @@ async function renderUserList() {
               <td style="padding:8px">${esc(u.department||'')}</td>
               <td style="padding:8px">${u.is_active==0?'<span style="color:var(--muted)">Inactive</span>':'<span style="color:var(--green)">Active</span>'}</td>
               <td style="padding:8px;text-align:center">
-                <button class="btn btn-sm" style="background:#1d4ed8;color:#fff;margin-right:4px" onclick="promptResetPassword(${u.id},'${esc(u.full_name||'')}')">Reset Pwd</button>${String(u.id) !== String(currentUserId) ? '<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="confirmDeleteUser(' + (u.id) + ',\'' + (esc(u.full_name||'')) + '\')">Delete</button>' : ''}
+                <button class="btn btn-sm" style="background:#1d4ed8;color:#fff;margin-right:4px" onclick="promptResetPassword(${u.id},'${esc(u.full_name||'')}')">Reset Pwd</button>${String(u.id) !== String(currentUserId) ? `<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="confirmDeleteUser(${u.id},'${esc(u.full_name||'')}')">Delete</button>` : ''}
               </td>
             </tr>
           `).join('')}
@@ -170,22 +154,22 @@ async function renderCreateUser() {
         <div class="form-row"><label>Password *</label><input name="password" type="text" required value="OORJA@2026" minlength="6"></div>
         <div class="form-row"><label>Role *</label>
           <select name="role_name" required><option value="">-- Select Role --</option>
-            ${roles.map(function(r) { return '<option value="' + (esc(r.name)) + '">' + (esc(r.name)) + '</option>'; }).join('')}
+            ${roles.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-row"><label>Department</label>
           <select name="department_id"><option value="">-- Select --</option>
-            ${departments.map(function(d) { return '<option value="' + (d.id) + '">' + (esc(d.name)) + ' (' + (esc(d.code||'')) + ')</option>'; }).join('')}
+            ${departments.map(d=>`<option value="${d.id}">${esc(d.name)} (${esc(d.code||'')})</option>`).join('')}
           </select>
         </div>
         <div class="form-row"><label>Shift</label>
           <select name="shift_id"><option value="">-- Select --</option>
-            ${shifts.map(function(s) { return '<option value="' + (s.id) + '">' + (esc(s.name)) + '</option>'; }).join('')}
+            ${shifts.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-row"><label>Reporting Manager</label>
           <select name="manager_id"><option value="">-- Select --</option>
-            ${managers.map(function(m) { return '<option value="' + (m.id) + '">' + (esc(m.full_name)) + ' (' + (esc(m.employee_id)) + ')</option>'; }).join('')}
+            ${managers.map(m=>`<option value="${m.id}">${esc(m.full_name)} (${esc(m.employee_id)})</option>`).join('')}
           </select>
         </div>
         <div class="form-row"><label>Designation</label><input name="designation" type="text" placeholder="Sr. Operator"></div>
@@ -253,4 +237,117 @@ window.loadAuditTrail = async function() {
       </table>
     </div>
   `;
+};
+
+/* ---------- Data Manager ---------- */
+const DATA_TYPES = [
+  { key: 'safety',        label: 'Safety Reports',          icon: '🦺' },
+  { key: 'quality',       label: 'Quality Reports',         icon: '📋' },
+  { key: 'kaizen',        label: 'Kaizen Ideas',            icon: '⚡' },
+  { key: 'kaizen_impl',   label: 'Kaizen Implementations',  icon: '🔧' },
+  { key: 'qc',            label: 'QC Circle Projects',      icon: '👥' },
+  { key: 'behavioral',    label: 'Behavioral Evaluations',  icon: '🧠' },
+  { key: 'learning',      label: 'Learning Materials',      icon: '📚' },
+  { key: 'rewards',       label: 'Reward Transactions',     icon: '🪙' },
+  { key: 'notifications', label: 'Notifications',           icon: '🔔' },
+];
+
+async function renderDataManager() {
+  const el = document.getElementById('admin-data');
+  el.innerHTML = '<div class="loading">Loading data counts...</div>';
+
+  const res = await apiFetch('/api/admin/data-management');
+  if (!res.ok) { el.innerHTML = '<div class="empty">Error loading data</div>'; return; }
+
+  const { counts } = res.data;
+
+  el.innerHTML = '<p class="section-label" style="color:#991b1b">⚠️ Data Manager — Admin Only</p>' +
+    '<div class="card" style="margin-bottom:16px;background:#fef2f2;border:1px solid #fca5a5;padding:12px 16px;font-size:13px;color:#7f1d1d">' +
+    '<strong>Warning:</strong> Deleting records is permanent and cannot be undone. Use this only to remove test data or incorrect entries.' +
+    '</div>' +
+    '<div id="dm-overview"></div>' +
+    '<div id="dm-records" style="margin-top:16px"></div>';
+
+  const overview = document.getElementById('dm-overview');
+  overview.innerHTML = DATA_TYPES.map(function(t) {
+    const info = counts[t.key] || { count: 0 };
+    return '<div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:12px 16px">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+      '<span style="font-size:20px">' + t.icon + '</span>' +
+      '<div><div style="font-weight:600;font-size:14px">' + t.label + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + info.count + ' record' + (info.count !== 1 ? 's' : '') + '</div></div></div>' +
+      '<div style="display:flex;gap:8px">' +
+      (info.count > 0 ? '<button class="btn btn-sm" style="background:#1d4ed8;color:#fff" onclick="dmViewRecords(\'' + t.key + '\',\'' + t.label + '\')">View / Delete</button>' : '<span style="font-size:12px;color:var(--muted)">Empty</span>') +
+      (info.count > 0 ? '<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="dmClearAll(\'' + t.key + '\',\'' + t.label + '\',' + info.count + ')">Clear All</button>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+window.dmClearAll = async function(type, label, count) {
+  if (!confirm('Delete ALL ' + count + ' records from "' + label + '"?\n\nThis CANNOT be undone.')) return;
+  if (!confirm('Are you absolutely sure? This will permanently delete all ' + label + '.')) return;
+  const res = await apiFetch('/api/admin/data-management?type=' + type + '&clear=1', { method: 'DELETE' });
+  if (res.ok) { toast(res.data.message); renderDataManager(); }
+  else toast(res.data?.error || 'Failed to clear');
+};
+
+window.dmViewRecords = async function(type, label, page) {
+  page = page || 1;
+  const container = document.getElementById('dm-records');
+  container.innerHTML = '<div class="loading">Loading ' + label + '...</div>';
+
+  const res = await apiFetch('/api/admin/data-management?type=' + type + '&page=' + page);
+  if (!res.ok) { container.innerHTML = '<div class="empty">Error loading records</div>'; return; }
+
+  const { records, total, per_page } = res.data;
+  const totalPages = Math.ceil(total / per_page);
+
+  let html = '<p class="section-label">' + label + ' (' + total + ' total)</p>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
+  html += '<thead><tr style="background:var(--surface);border-bottom:2px solid var(--border)">';
+
+  if (records.length > 0) {
+    Object.keys(records[0]).forEach(function(col) {
+      html += '<th style="padding:8px;text-align:left;white-space:nowrap">' + col + '</th>';
+    });
+    html += '<th style="padding:8px;text-align:center">Delete</th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  records.forEach(function(row) {
+    html += '<tr style="border-bottom:1px solid var(--border)">';
+    Object.values(row).forEach(function(val) {
+      const display = val === null ? '<span style="color:var(--muted)">null</span>' : esc(String(val).substring(0, 60)) + (String(val).length > 60 ? '…' : '');
+      html += '<td style="padding:8px;white-space:nowrap">' + display + '</td>';
+    });
+    html += '<td style="padding:8px;text-align:center"><button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="dmDeleteOne(\'' + type + '\',' + row.id + ',\'' + label + '\')">Delete</button></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  // Pagination
+  if (totalPages > 1) {
+    html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;align-items:center">';
+    if (page > 1) html += '<button class="btn-secondary" onclick="dmViewRecords(\'' + type + '\',\'' + label + '\',' + (page-1) + ')">← Prev</button>';
+    html += '<span style="font-size:13px">Page ' + page + ' / ' + totalPages + '</span>';
+    if (page < totalPages) html += '<button class="btn-secondary" onclick="dmViewRecords(\'' + type + '\',\'' + label + '\',' + (page+1) + ')">Next →</button>';
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+};
+
+window.dmDeleteOne = async function(type, id, label) {
+  if (!confirm('Delete ' + label + ' #' + id + '? This cannot be undone.')) return;
+  const res = await apiFetch('/api/admin/data-management?type=' + type + '&id=' + id, { method: 'DELETE' });
+  if (res.ok) {
+    toast(res.data.message);
+    renderDataManager();
+    // Refresh the record list
+    const container = document.getElementById('dm-records');
+    if (container.innerHTML) dmViewRecords(type, label);
+  } else {
+    toast(res.data?.error || 'Delete failed');
+  }
 };
