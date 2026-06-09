@@ -48,11 +48,10 @@ export async function onRequestPost({ request, env, data }) {
 
   // Verify evaluator has authority (SIC/Manager for this employee)
   if (user.role === 'SIC' && targetUser.sic_id !== user.id) {
-    return err('You can only evaluate employees assigned to you', 403);
+    return err('You can only evaluate employees assigned to you as SIC', 403);
   }
-  if (user.role === 'Manager' && targetUser.department_id !== user.department_id) {
-    return err('You can only evaluate employees in your department', 403);
-  }
+  // Managers can evaluate any operator in the organization
+  // HR will approve the final evaluation
 
   // Check for duplicate (one eval per employee per month)
   const existing = await env.DB.prepare(

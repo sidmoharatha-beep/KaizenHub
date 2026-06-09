@@ -342,9 +342,8 @@ window.dmDeleteOne = async function(type, id, label) {
   if (!confirm('Delete ' + label + ' #' + id + '? This cannot be undone.')) return;
   const res = await apiFetch('/api/admin/data-management?type=' + type + '&id=' + id, { method: 'DELETE' });
   if (res.ok) {
-    toast(res.data.message);
-    renderDataManager();
-    // Refresh the record list
+    toast(res.data?.message || 'Deleted');
+    await renderDataManager();
     const container = document.getElementById('dm-records');
     if (container && container.innerHTML) dmViewRecords(type, label);
   } else {

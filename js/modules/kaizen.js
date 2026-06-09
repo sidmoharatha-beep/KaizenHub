@@ -1,4 +1,4 @@
-import { apiFetch, esc, statusBadge, fmtDate, toast, initAttachmentUpload, buildMultipartForm } from '../app.js';
+import { apiFetch, esc, statusBadge, fmtDate, toast, initAttachmentUpload, buildMultipartForm, currentUser } from '../app.js';
 
 const ICONS = {
   kaizen: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
@@ -9,69 +9,11 @@ async function getApprovedKaizenForUser() {
   try {
     const res = await apiFetch('/api/kaizen/submit?status=Approved');
     if (res.ok && res.data?.submissions?.length > 0) {
-      const uid = res.data.currentUserId;
-      const list = uid
-        ? res.data.submissions.filter(k => k.user_id === uid)
-        : res.data.submissions;
-      return list.length > 0 ? list[0] : null;
+      const myApproved = res.data.submissions.filter(k => k.user_id === currentUser?.id);
+      return myApproved.length > 0 ? myApproved[0] : null;
     }
   } catch {}
   return null;
-}
-
-// Check if user has a kaizen in-progress (Submitted / Screened / Pending Evaluation)
-async function getPendingKaizenForUser() {
-  try {
-    const res = await apiFetch('/api/kaizen/submit');
-    if (res.ok && res.data?.submissions?.length > 0) {
-      const uid = res.data.currentUserId;
-      const inProgress = ['Submitted', 'Screened', 'Pending Evaluation'];
-      const list = res.data.submissions.filter(k =>
-        inProgress.includes(k.status) && (!uid || k.user_id === uid)
-      );
-      return list.length > 0 ? list[0] : null;
-    }
-  } catch {}
-  return null;
-}
-
-function renderPendingStatusCard(container, kaizen, managerOptions) {
-  const statusColors = {
-    'Submitted':          { bg: '#eff6ff', border: '#3b82f6', text: '#1d4ed8', icon: '⏳' },
-    'Screened':           { bg: '#f0fdf4', border: '#22c55e', text: '#15803d', icon: '✅' },
-    'Pending Evaluation': { bg: '#fefce8', border: '#eab308', text: '#854d0e', icon: '🔍' },
-  };
-  const s = statusColors[kaizen.status] || { bg: '#f9fafb', border: '#6b7280', text: '#374151', icon: '📋' };
-
-  const nextStep = {
-    'Submitted':          'Waiting for manager review',
-    'Screened':           'Passed screening — awaiting manager approval',
-    'Pending Evaluation': 'Submitted for evaluation by the evaluator',
-  }[kaizen.status] || 'In progress';
-
-  container.innerHTML = \`
-    <div class="module-header">
-      <div class="module-icon kaizen">\${ICONS.kaizen}</div>
-      <div class="module-header-text"><h3>Kaizen Status</h3><p>Your current kaizen idea is being reviewed</p></div>
-    </div>
-    <div class="card" style="background:\${s.bg};border:1.5px solid \${s.border};margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:22px">\${s.icon}</span>
-        <div>
-          <div style="font-weight:700;color:\${s.text};font-size:15px">\${kaizen.status}</div>
-          <div style="font-size:13px;color:var(--charcoal-light)">\${nextStep}</div>
-        </div>
-      </div>
-      <div style="font-weight:600;font-size:15px;margin-bottom:4px">\${esc(kaizen.title)}</div>
-      <div style="font-size:13px;color:var(--charcoal-light)">Submitted: \${fmtDate(kaizen.created_at)}</div>
-      \${kaizen.approver_name ? '<div style="font-size:13px;color:var(--charcoal-light);margin-top:2px">Assigned to: ' + esc(kaizen.approver_name) + '</div>' : ''}
-    </div>
-    <div class="card" style="background:var(--bg-secondary)">
-      <div style="font-size:13px;color:var(--charcoal-light);text-align:center">
-        You can submit a new kaizen idea once this one is closed or rejected.
-      </div>
-    </div>
-  \`;
 }
 
 export async function renderKaizenSubmit(container) {
@@ -99,21 +41,15 @@ export async function renderKaizenSubmit(container) {
     ? evaluators.map(e => `<option value="${e.id}">${esc(e.full_name)}${e.department_name ? ' (' + (esc(e.department_name)) + ')' : ''}</option>`).join('')
     : '<option value="">No evaluators available</option>';
 
-  // Check kaizen statuses in order of priority
+  // Check if user has an Approved kaizen → show implementation form
   const approvedKaizen = await getApprovedKaizenForUser();
+
   if (approvedKaizen) {
     renderImplementationForm(container, approvedKaizen, coImplOptions, evalOptions);
     return;
   }
 
-  // Check if operator has a kaizen in-progress (Submitted / Screened / Pending Evaluation)
-  const pendingKaizen = await getPendingKaizenForUser();
-  if (pendingKaizen) {
-    renderPendingStatusCard(container, pendingKaizen, managerOptions);
-    return;
-  }
-
-  // Stage 1: No active kaizen — show submission form
+  // Stage 1: Submit new kaizen
   renderNewKaizenForm(container, managerOptions);
 }
 
@@ -158,7 +94,7 @@ function renderNewKaizenForm(container, managerOptions) {
 
     const res = await apiFetch('/api/kaizen/submit', { method: 'POST', body: JSON.stringify(body) });
     if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
-    toast(res.data.message);
+    toast(res.data?.message || 'Kaizen idea submitted!');
     e.target.reset();
     // Re-render to check for approved kaizen
     renderKaizenSubmit(container);
@@ -259,12 +195,9 @@ function renderImplementationForm(container, kaizen, coImplOptions, evalOptions)
       body: formData
     });
 
-    let result;
-    if (res.ok) {
-      try { result = await res.json(); } catch { result = {}; }
-    }
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
-    toast(result.message);
+    toast(result?.message || 'Implementation submitted!');
     photoFile = null;
     const preview = container.querySelector('#kaizen-photo-preview');
     const removeBtn = container.querySelector('#kaizen-photo-remove');

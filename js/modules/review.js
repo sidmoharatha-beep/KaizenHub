@@ -203,14 +203,7 @@ window.reviewAction = async function(type, id, action) {
   const res = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
   if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
 
-  const toastMsg = {
-    'Approved': 'Approved! ✅',
-    'approve': 'Approved! ✅',
-    'screen': 'Screened ✅ — awaiting approval',
-    'Rejected': 'Rejected',
-    'reject': 'Rejected',
-  }[action] || action;
-  toast(toastMsg);
+  toast(action === 'Approved' ? 'Approved!' : 'Rejected');
   // Reload the active tab
   const activeTab = document.querySelector('#review-tabs .tab-btn.active');
   if (activeTab) activeTab.click();

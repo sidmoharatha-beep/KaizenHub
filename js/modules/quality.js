@@ -71,28 +71,23 @@ export async function renderQualitySubmit(container) {
     const fd = new FormData(e.target);
     const body = Object.fromEntries(fd.entries());
 
-    let res;
+    let result;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      res = await fetch('/api/quality/submit', {
+      const rawRes = await fetch('/api/quality/submit', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
+      result = await rawRes.json().catch(() => ({}));
+      if (!rawRes.ok) { toast('Error: ' + (result?.error || 'Failed to submit')); return; }
     } else {
-      res = await apiFetch('/api/quality/submit', {
-        method: 'POST',
-        body: JSON.stringify(body)
-      });
+      const res = await apiFetch('/api/quality/submit', { method: 'POST', body: JSON.stringify(body) });
+      result = res.data;
+      if (!res.ok) { toast('Error: ' + (result?.error || 'Failed to submit')); return; }
     }
 
-    const result = res.ok ? res.data : null;
-    if (!res.ok) {
-      toast('Error: ' + (result?.error || 'Failed to submit'));
-      return;
-    }
-
-    toast('Quality report submitted! Score: ' + result.quality_score);
+    toast('Quality report submitted! Score: ' + (result.quality_score || ''));
     e.target.reset();
     photoFile = null;
     const preview = container.querySelector('#quality-photo-preview');

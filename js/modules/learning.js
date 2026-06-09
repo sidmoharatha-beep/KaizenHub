@@ -22,7 +22,7 @@ export async function renderLearning(container) {
         <div class="form-row"><label>Material Type *</label>
           <select name="category" required>
             <option value="">Select type...</option>
-            ${CATEGORIES.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('')}
+            ${CATEGORIES.map(function(c) { return '<option value="' + (c) + '">' + (c) + '</option>'; }).join('')}
           </select></div>
         <div class="form-row"><label>Description</label><textarea name="description" rows="2" placeholder="Optional description"></textarea></div>
         <div class="form-row">
@@ -36,7 +36,7 @@ export async function renderLearning(container) {
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="learning-filter-btns">
       <button class="tab-btn active" data-cat="">All</button>
-      ${CATEGORIES.map(function(c) { return '<button class="tab-btn" data-cat="' + c + '">' + c + '</button>'; }).join('')}
+      ${CATEGORIES.map(function(c) { return '<button class="tab-btn" data-cat="' + (c) + '">' + (c) + '</button>'; }).join('')}
     </div>
     <div id="learning-list"><div class="loading">Loading materials...</div></div>
   `;
@@ -79,8 +79,7 @@ export async function renderLearning(container) {
       headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
       body: formData
     });
-    let result;
-    try { result = await res.json(); } catch { result = {}; }
+    const result = res.ok ? await res.json() : null;
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast('Material uploaded!');
     e.target.reset();
@@ -119,21 +118,23 @@ export async function renderLearning(container) {
             <div style="flex:1;min-width:0">
               <h4 style="margin:0 0 4px;font-size:16px">${esc(m.title)}</h4>
               <div class="sub-meta">${fmtDate(m.created_at)} · ${esc(m.category)} · ${formatSize(m.file_size)}</div>
-              ${m.description ? '<div class="sub-excerpt" style="margin-top:4px">' + esc(m.description) + '</div>' : ''}
+              ${m.description ? '<div class="sub-excerpt" style="margin-top:4px">' + (esc(m.description)) + '</div>' : ''}
               <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <button onclick="authDownload('${downloadUrl}','${esc(m.file_name || m.title)}')" class="btn-primary" style="padding:6px 14px;font-size:13px;cursor:pointer">
+                <a href="${downloadUrl}" download="${esc(m.file_name || m.title)}" class="btn-primary" style="padding:6px 14px;font-size:13px;text-decoration:none;display:inline-block">
                   Download ${isPdf ? 'PDF' : isImage ? 'Image' : isVideo ? 'Video' : 'File'}
-                </button>
+                </a>
                 <span style="font-size:12px;color:var(--charcoal-xlight)">${esc(m.file_name || '')}</span>
               </div>
             </div>
-            ${isImage ? '<div style="flex-shrink:0"><img src="" data-src="' + downloadUrl + '" alt="" onclick="authDownload(\'' + downloadUrl + '\',\'' + esc(m.file_name || m.title) + '\')" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" class="auth-img"/></div>' : ''}
+            ${isImage ? '<div style="flex-shrink:0"><a href="' + (downloadUrl) + '" target="_blank" download><img src="' + (downloadUrl) + '" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer"/></a></div>' : ''}
           </div>
-          ${isAdmin ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px"><button class="btn btn-sm" style="background:' + (m.is_active==1 ? '#991b1b' : '#1d4ed8') + ';color:#fff" onclick="adminToggleLearning(' + m.id + ',' + m.is_active + ')">' + (m.is_active==1 ? 'Deactivate' : 'Activate') + '</button><button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="adminDeleteLearning(' + m.id + ',\'' + esc(m.title) + '\')">Delete</button></div>' : ''}
+          ${isAdmin ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px">
+            <button class="btn btn-sm" style="background:${m.is_active==1?'#991b1b':'#1d4ed8'};color:#fff" onclick="adminToggleLearning(${m.id},${m.is_active})">${m.is_active==1?'Deactivate':'Activate'}</button>
+            <button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="adminDeleteLearning(${m.id},'${esc(m.title)}')">Delete</button>
+          </div>` : ''}
         </div>
       `;
     }).join('');
-    setTimeout(function() { window.loadAuthImages && window.loadAuthImages(); }, 50);
   }
 
   loadMaterials('');
@@ -158,36 +159,4 @@ window.adminToggleLearning = async function(id, currentStatus) {
   const res = await apiFetch(`/api/learning/${id}`, { method: 'PUT', body: JSON.stringify({ is_active: newStatus }) });
   if (res.ok) { toast(newStatus == 1 ? 'Activated' : 'Deactivated'); window.loadMaterials && window.loadMaterials(''); }
   else toast(res.data?.error || 'Toggle failed');
-};
-
-// Authenticated download — fetches with auth token then triggers browser save
-window.authDownload = async function(url, filename) {
-  try {
-    const token = localStorage.getItem('authToken') || '';
-    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
-    if (!res.ok) { toast('Download failed: ' + res.status); return; }
-    const blob = await res.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename || 'download';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  } catch (e) {
-    toast('Download error: ' + e.message);
-  }
-};
-
-// Load authenticated images (R2 images need auth token)
-window.loadAuthImages = function() {
-  document.querySelectorAll('img.auth-img[data-src]').forEach(async function(img) {
-    try {
-      const token = localStorage.getItem('authToken') || '';
-      const res = await fetch(img.dataset.src, { headers: { 'Authorization': 'Bearer ' + token } });
-      if (res.ok) {
-        const blob = await res.blob();
-        img.src = URL.createObjectURL(blob);
-      }
-    } catch (e) {}
-  });
 };
