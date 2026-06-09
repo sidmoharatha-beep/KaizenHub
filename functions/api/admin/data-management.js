@@ -78,6 +78,7 @@ export async function onRequestDelete({ request, env, data }) {
   const url = new URL(request.url);
   const type = url.searchParams.get('type');
   const id = url.searchParams.get('id');
+  const idInt = id ? parseInt(id, 10) : null;
   const clearAll = url.searchParams.get('clear') === '1';
 
   if (!type || !ALLOWED_TYPES[type]) return err('Invalid type', 400);
@@ -146,22 +147,29 @@ export async function onRequestDelete({ request, env, data }) {
         } catch {}
       }
 
-      // For kaizen, delete children first
+      // Delete FK children first using parsed integer id
       if (type === 'kaizen') {
-        try { await env.DB.prepare(`DELETE FROM kaizen_implementations WHERE kaizen_id = ?`).bind(id).run(); } catch {}
-        try { await env.DB.prepare(`DELETE FROM kaizen_evaluations WHERE kaizen_id = ?`).bind(id).run(); } catch {}
-        try { await env.DB.prepare(`DELETE FROM approval_workflows WHERE entity_type = 'kaizen_idea' AND entity_id = ?`).bind(id).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM kaizen_implementations WHERE kaizen_id = ?`).bind(idInt).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM kaizen_evaluations WHERE kaizen_id = ?`).bind(idInt).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM approval_workflows WHERE entity_type = 'kaizen_idea' AND entity_id = ?`).bind(idInt).run(); } catch {}
       }
       if (type === 'qc') {
-        try { await env.DB.prepare(`DELETE FROM quality_circle_members WHERE project_id = ?`).bind(id).run(); } catch {}
-        try { await env.DB.prepare(`DELETE FROM qc_12step_scores WHERE project_id = ?`).bind(id).run(); } catch {}
-        try { await env.DB.prepare(`DELETE FROM qc_final_evaluations WHERE project_id = ?`).bind(id).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM quality_circle_members WHERE project_id = ?`).bind(idInt).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM qc_12step_scores WHERE project_id = ?`).bind(idInt).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM qc_final_evaluations WHERE project_id = ?`).bind(idInt).run(); } catch {}
+      }
+      // Clean up approval_workflows for safety and quality (entity_type based, no FK but keeps DB clean)
+      if (type === 'safety') {
+        try { await env.DB.prepare(`DELETE FROM approval_workflows WHERE entity_type = 'safety_report' AND entity_id = ?`).bind(idInt).run(); } catch {}
+      }
+      if (type === 'quality') {
+        try { await env.DB.prepare(`DELETE FROM approval_workflows WHERE entity_type = 'quality_report' AND entity_id = ?`).bind(idInt).run(); } catch {}
       }
 
-      const result = await env.DB.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).bind(id).run();
+      const result = await env.DB.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).bind(idInt).run();
       if (result.meta?.changes === 0) return err('Record not found', 404);
 
-      await auditLog(env, data.user, `admin_delete_${type}`, cfg.table, id, {}, getClientIP(request));
+      await auditLog(env, data.user, `admin_delete_${type}`, cfg.table, idInt, {}, getClientIP(request));
       return json({ success: true, message: `Deleted ${cfg.label} #${id}` });
     }
   } catch (e) {
