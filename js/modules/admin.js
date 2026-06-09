@@ -1,6 +1,6 @@
 import { apiFetch, apiPost, apiPut, apiDelete, esc, toast } from '../app.js';
 
-export const renderAdmin = async () => {
+export async function renderAdmin() {
   const el = document.getElementById('admin-content');
   if (!el) return;
   el.innerHTML = '<div class="loading">Loading admin...</div>';
@@ -24,19 +24,38 @@ export const renderAdmin = async () => {
           <div><div style="font-size:28px;font-weight:800;color:var(--navy)">${summary.total_rewards_distributed||0}</div><div style="font-size:11px;color:var(--muted)">Points Distributed</div></div>
           <div><div style="font-size:28px;font-weight:800;color:var(--navy)">${summary.total_transactions||0}</div><div style="font-size:11px;color:var(--muted)">Transactions</div></div>
         </div>
-`
       </div>
-      <div class="kpi-grid">${Object.entries(by_module||{}).map(([mod,stats])=>`<div class="kpi-card"><div class="kpi-val">${stats.total||0}</div><div class="kpi-label">${mod} Submissions</div></div>`).join('')}</div>
+      <div class="kpi-grid" id="admin-module-kpi"></div>
       <p class="section-label">Top Performers</p>
       ${renderTopPerformers(top_performers)}
       <p class="section-label">By Department</p>
-      <div class="card">${(by_department||[]).map(d=>`<div class="ledger-row"><span>${esc(d.department)}</span><span class="ledger-pts">${d.points||0} pts &#183; ${d.transactions||0}</span></div>`).join('')||'<div class="empty">No data</div>'}</div>
+      <div class="card" id="admin-dept-list"></div>
     </div>
     <div id="admin-users" style="display:none"></div>
     <div id="admin-create" style="display:none"></div>
     <div id="admin-audit" style="display:none"></div>
   `;
   window.switchAdminTab = switchAdminTab;
+
+  // Populate module KPIs (avoid nested backticks for Edge compatibility)
+  const kpiGrid = document.getElementById('admin-module-kpi');
+  if (kpiGrid) {
+    kpiGrid.innerHTML = Object.entries(by_module || {}).map(function(entry) {
+      const mod = entry[0]; const stats = entry[1];
+      return '<div class="kpi-card"><div class="kpi-val">' + (stats.total || 0) + '</div><div class="kpi-label">' + mod + ' Submissions</div></div>';
+    }).join('');
+  }
+
+  // Populate department list
+  const deptList = document.getElementById('admin-dept-list');
+  if (deptList) {
+    const depts = by_department || [];
+    deptList.innerHTML = depts.length
+      ? depts.map(function(d) {
+          return '<div class="ledger-row"><span>' + esc(d.department) + '</span><span class="ledger-pts">' + (d.points || 0) + ' pts &middot; ' + (d.transactions || 0) + '</span></div>';
+        }).join('')
+      : '<div class="empty">No data</div>';
+  }
 }
 
 function renderTopPerformers(list) {
