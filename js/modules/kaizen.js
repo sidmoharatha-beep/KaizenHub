@@ -1,4 +1,4 @@
-import { apiFetch, esc, statusBadge, fmtDate, toast, initAttachmentUpload, buildMultipartForm, currentUser } from '../app.js';
+import { apiFetch, esc, statusBadge, fmtDate, toast, initAttachmentUpload, buildMultipartForm } from '../app.js';
 
 const ICONS = {
   kaizen: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
@@ -9,14 +9,14 @@ async function getApprovedKaizenForUser() {
   try {
     const res = await apiFetch('/api/kaizen/submit?status=Approved');
     if (res.ok && res.data?.submissions?.length > 0) {
-      const myApproved = res.data.submissions.filter(k => k.user_id === currentUser?.id);
+      const myApproved = res.data.submissions.filter(k => k.user_id === res.data.currentUserId);
       return myApproved.length > 0 ? myApproved[0] : null;
     }
   } catch {}
   return null;
 }
 
-export const renderKaizenSubmit = async (container) => {
+export async function renderKaizenSubmit(container) {
   let photoFile = null;
 
   let managers = [];
@@ -32,13 +32,13 @@ export const renderKaizenSubmit = async (container) => {
   } catch {}
 
   const managerOptions = managers.length
-    ? managers.map(m => `<option value="${m.id}">${esc(m.full_name)}</option>`).join('')
+    ? managers.map(function(m) { return '<option value="' + (m.id) + '">' + (esc(m.full_name)) + '</option>'; }).join('')
     : '<option value="">No managers available</option>';
   const coImplOptions = operators.length
-    ? operators.map(o => `<option value="${o.id}">${esc(o.full_name)}</option>`).join('')
+    ? operators.map(function(o) { return '<option value="' + (o.id) + '">' + (esc(o.full_name)) + '</option>'; }).join('')
     : '<option value="">No operators available</option>';
   const evalOptions = evaluators.length
-    ? evaluators.map(e => `<option value="${e.id}">${esc(e.full_name)}${e.department_name ? ` (${esc(e.department_name)})` : ''}</option>`).join('')
+    ? evaluators.map(e => `<option value="${e.id}">${esc(e.full_name)}${e.department_name ? ' (' + (esc(e.department_name)) + ')' : ''}</option>`).join('')
     : '<option value="">No evaluators available</option>';
 
   // Check if user has an Approved kaizen → show implementation form
@@ -93,8 +93,9 @@ function renderNewKaizenForm(container, managerOptions) {
     body.approver_id = parseInt(body.approver_id);
 
     const res = await apiFetch('/api/kaizen/submit', { method: 'POST', body: JSON.stringify(body) });
-    if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
-    toast(res.data?.message || 'Kaizen idea submitted!');
+    const result = res.ok ? await res.json() : null;
+    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
+    toast(result.message);
     e.target.reset();
     // Re-render to check for approved kaizen
     renderKaizenSubmit(container);
@@ -195,9 +196,9 @@ function renderImplementationForm(container, kaizen, coImplOptions, evalOptions)
       body: formData
     });
 
-    const result = await res.json().catch(() => ({}));
+    const result = res.ok ? await res.json() : null;
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
-    toast(result?.message || 'Implementation submitted for evaluation!');
+    toast(result.message);
     photoFile = null;
     const preview = container.querySelector('#kaizen-photo-preview');
     const removeBtn = container.querySelector('#kaizen-photo-remove');

@@ -14,7 +14,7 @@ export async function renderLeaderboard() {
   el.innerHTML = `
     <div class="page-header"><h1>Leaderboard</h1></div>
     <div id="leaderboard-tabs" class="tab-btns">
-      ${cats.map(c => `<button class="tab-btn ${c === 'overall' ? 'active' : ''}" data-cat="${c}" onclick="switchLb('${c}',this)">${c === 'qc' ? 'Quality Circle' : c}</button>`).join('')}
+      ${cats.map(function(c) { return '<button class="tab-btn ' + (c === 'overall' ? 'active' : '') + '" data-cat="' + (c) + '" onclick="switchLb(\'' + (c) + '\',this)">' + (c === 'qc' ? 'Quality Circle' : c) + '</button>'; }).join('')}
     </div>
     <div id="lb-table">
       ${renderLbRows(leaderboard, my_position)}
@@ -22,7 +22,7 @@ export async function renderLeaderboard() {
   `;
 }
 
-const renderLbRows = (rows, me) => {
+function renderLbRows(rows, me) {
   if (!rows?.length) return '<div class="empty">No leaderboard data yet</div>';
 
   let html = `

@@ -4,7 +4,7 @@ const ICONS = {
   quality: '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>'
 };
 
-export const renderQualitySubmit = async (container) => {
+export async function renderQualitySubmit(container) {
   let photoFile = null;
   let managers = [];
   try {
@@ -14,7 +14,7 @@ export const renderQualitySubmit = async (container) => {
     }
   } catch {}
   const managerOptions = managers.length
-    ? managers.map(m => `<option value="${m.id}">${esc(m.full_name)}</option>`).join('')
+    ? managers.map(function(m) { return '<option value="' + (m.id) + '">' + (esc(m.full_name)) + '</option>'; }).join('')
     : '<option value="">No managers available</option>';
 
   container.innerHTML = `
@@ -23,7 +23,7 @@ export const renderQualitySubmit = async (container) => {
       <div class="module-header-text"><h3>Quality Report</h3><p>Report quality hazards or quality safety observations</p></div>
     </div>
     <form id="quality-form" class="card">
-      <div class="form-row"><label>Subcategory *</label>`
+      <div class="form-row"><label>Subcategory *</label>
         <select name="subcategory" required>
           <option value="">Select type...</option>
           <option value="Quality Hazard">Quality Hazard</option>
@@ -71,29 +71,25 @@ export const renderQualitySubmit = async (container) => {
     const fd = new FormData(e.target);
     const body = Object.fromEntries(fd.entries());
 
-    let result;
+    let res;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      const rawRes = await fetch('/api/quality/submit', {
+      res = await fetch('/api/quality/submit', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
-      result = await rawRes.json().catch(() => ({}));
-      if (!rawRes.ok) {
-        toast('Error: ' + (result?.error || 'Failed to submit'));
-        return;
-      }
     } else {
-      const res = await apiFetch('/api/quality/submit', {
+      res = await apiFetch('/api/quality/submit', {
         method: 'POST',
         body: JSON.stringify(body)
       });
-      result = res.data;
-      if (!res.ok) {
-        toast('Error: ' + (result?.error || 'Failed to submit'));
-        return;
-      }
+    }
+
+    const result = res.ok ? await res.json() : null;
+    if (!res.ok) {
+      toast('Error: ' + (result?.error || 'Failed to submit'));
+      return;
     }
 
     toast('Quality report submitted! Score: ' + result.quality_score);
@@ -121,8 +117,8 @@ async function loadQualityList() {
       <h4>${esc(q.title)}</h4>
       <div class="sub-meta">${fmtDate(q.created_at)} · ${esc(q.subcategory)} · Score: ${q.severity + q.detection + q.customer_risk} · ${statusBadge(q.status)}</div>
       <div class="sub-excerpt">${esc(q.description)}</div>
-      ${q.attachment_url ? `<div style="margin-top:8px"><img src="/api/attachments/${q.attachment_url}" style="max-height:80px;border-radius:8px;border:1px solid var(--border)" alt="attachment"/></div>` : ''}
-      ${q.reward_points > 0 ? `<div style="color:var(--green-light);font-size:13px;font-weight:600">+${q.reward_points} pts earned</div>` : ''}
+      ${q.attachment_url ? '<div style="margin-top:8px"><img src="/api/attachments/' + (q.attachment_url) + '" style="max-height:80px;border-radius:8px;border:1px solid var(--border)" alt="attachment"/></div>' : ''}
+      ${q.reward_points > 0 ? '<div style="color:var(--green-light);font-size:13px;font-weight:600">+' + (q.reward_points) + ' pts earned</div>' : ''}
     </div>
   `).join('');
 }

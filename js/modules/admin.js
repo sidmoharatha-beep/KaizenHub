@@ -118,7 +118,7 @@ async function renderUserList() {
               <td style="padding:8px">${esc(u.department||'')}</td>
               <td style="padding:8px">${u.is_active==0?'<span style="color:var(--muted)">Inactive</span>':'<span style="color:var(--green)">Active</span>'}</td>
               <td style="padding:8px;text-align:center">
-                <button class="btn btn-sm" style="background:#1d4ed8;color:#fff;margin-right:4px" onclick="promptResetPassword(${u.id},'${esc(u.full_name||'')}')">Reset Pwd</button>${String(u.id) !== String(currentUserId) ? `<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="confirmDeleteUser(${u.id},'${esc(u.full_name||'')}')">Delete</button>` : ''}
+                <button class="btn btn-sm" style="background:#1d4ed8;color:#fff;margin-right:4px" onclick="promptResetPassword(${u.id},'${esc(u.full_name||'')}')">Reset Pwd</button>${String(u.id) !== String(currentUserId) ? '<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="confirmDeleteUser(' + (u.id) + ',\'' + (esc(u.full_name||'')) + '\')">Delete</button>' : ''}
               </td>
             </tr>
           `).join('')}
@@ -170,22 +170,22 @@ async function renderCreateUser() {
         <div class="form-row"><label>Password *</label><input name="password" type="text" required value="OORJA@2026" minlength="6"></div>
         <div class="form-row"><label>Role *</label>
           <select name="role_name" required><option value="">-- Select Role --</option>
-            ${roles.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('')}
+            ${roles.map(function(r) { return '<option value="' + (esc(r.name)) + '">' + (esc(r.name)) + '</option>'; }).join('')}
           </select>
         </div>
         <div class="form-row"><label>Department</label>
           <select name="department_id"><option value="">-- Select --</option>
-            ${departments.map(d=>`<option value="${d.id}">${esc(d.name)} (${esc(d.code||'')})</option>`).join('')}
+            ${departments.map(function(d) { return '<option value="' + (d.id) + '">' + (esc(d.name)) + ' (' + (esc(d.code||'')) + ')</option>'; }).join('')}
           </select>
         </div>
         <div class="form-row"><label>Shift</label>
           <select name="shift_id"><option value="">-- Select --</option>
-            ${shifts.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}
+            ${shifts.map(function(s) { return '<option value="' + (s.id) + '">' + (esc(s.name)) + '</option>'; }).join('')}
           </select>
         </div>
         <div class="form-row"><label>Reporting Manager</label>
           <select name="manager_id"><option value="">-- Select --</option>
-            ${managers.map(m=>`<option value="${m.id}">${esc(m.full_name)} (${esc(m.employee_id)})</option>`).join('')}
+            ${managers.map(function(m) { return '<option value="' + (m.id) + '">' + (esc(m.full_name)) + ' (' + (esc(m.employee_id)) + ')</option>'; }).join('')}
           </select>
         </div>
         <div class="form-row"><label>Designation</label><input name="designation" type="text" placeholder="Sr. Operator"></div>

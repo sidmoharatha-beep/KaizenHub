@@ -64,10 +64,10 @@ async function renderSafetyForm(container) {
   } catch {}
 
   const deptOptions = departments.length
-    ? departments.map(d => `<option value="${d.id}">${esc(d.name)} (${esc(d.code)})</option>`).join('')
+    ? departments.map(function(d) { return '<option value="' + (d.id) + '">' + (esc(d.name)) + ' (' + (esc(d.code)) + ')</option>'; }).join('')
     : '<option value="">No departments available</option>';
   const managerOptions = managers.length
-    ? managers.map(m => `<option value="${m.id}">${esc(m.full_name)}</option>`).join('')
+    ? managers.map(function(m) { return '<option value="' + (m.id) + '">' + (esc(m.full_name)) + '</option>'; }).join('')
     : '<option value="">No managers available</option>';
 
   container.innerHTML = `
@@ -166,8 +166,8 @@ async function renderSafetyForm(container) {
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
-      const result = await res.json().catch(() => ({}));
-      if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
+      const result = await res.json();
+      if (!res.ok) { toast('Error: ' + (result.error || 'Failed')); return; }
       toast('Safety report submitted! Risk Score: ' + result.risk_score);
     } else {
       const res = await apiFetch('/api/safety/submit', { method: 'POST', body: JSON.stringify(data) });
@@ -203,12 +203,12 @@ async function loadSafetyList() {
     <div class="sub-card ${s.status.toLowerCase()}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <h4 style="margin:0">${esc(s.title)}</h4>
-        ${currentUser?.role === 'Admin' ? `<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="adminDeleteSafety(${s.id},'${esc(s.title)}')">Delete</button>` : ''}
+        ${currentUser?.role === 'Admin' ? '<button class="btn btn-sm" style="background:#991b1b;color:#fff" onclick="adminDeleteSafety(' + (s.id) + ',\'' + (esc(s.title)) + '\')">Delete</button>' : ''}
       </div>
       <div class="sub-meta">${fmtDate(s.created_at)} · ${esc(s.subcategory)} · Risk: ${s.risk_score || (s.consequence * s.likelihood)} · ${statusBadge(s.status)}</div>
       <div class="sub-excerpt">${esc(s.description)}</div>
-      ${s.attachment_url ? `<div style="margin-top:8px"><img src="/api/attachments/${s.attachment_url}" style="max-height:80px;border-radius:8px;border:1px solid var(--border)" alt="attachment"/></div>` : ''}
-      ${s.reward_points > 0 ? `<div style="color:var(--green-light);font-size:13px;font-weight:600">+${s.reward_points} pts earned</div>` : ''}
+      ${s.attachment_url ? '<div style="margin-top:8px"><img src="/api/attachments/' + (s.attachment_url) + '" style="max-height:80px;border-radius:8px;border:1px solid var(--border)" alt="attachment"/></div>' : ''}
+      ${s.reward_points > 0 ? '<div style="color:var(--green-light);font-size:13px;font-weight:600">+' + (s.reward_points) + ' pts earned</div>' : ''}
     </div>
   `).join('');
 }
@@ -231,11 +231,11 @@ async function renderQCForm(container) {
     if (res.ok) {
       const managers = res.data?.managers || [];
       approverOptions = managers.length
-        ? managers.map(m => `<option value="${m.id}">${esc(m.full_name)}</option>`).join('')
+        ? managers.map(function(m) { return '<option value="' + (m.id) + '">' + (esc(m.full_name)) + '</option>'; }).join('')
         : '<option value="">No managers available</option>';
       const evaluators = res.data?.evaluators || [];
       evaluatorOptions = evaluators.length
-        ? evaluators.map(ev => `<option value="${ev.id}">${esc(ev.full_name)} (${esc(ev.dept_code || 'EVAL')})</option>`).join('')
+        ? evaluators.map(function(ev) { return '<option value="' + (ev.id) + '">' + (esc(ev.full_name)) + ' (' + (esc(ev.dept_code || 'EVAL')) + ')</option>'; }).join('')
         : '<option value="">No evaluators available</option>';
     }
   } catch {}
@@ -365,22 +365,21 @@ async function renderQCForm(container) {
     body.submit = true;
     if (body.team_members.length < 3) { toast('Please add at least 3 team members'); return; }
 
-    let qcResult;
+    let res;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      const rawRes = await fetch('/api/qc/submit', {
+      res = await fetch('/api/qc/submit', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
-      qcResult = await rawRes.json().catch(() => ({}));
-      if (!rawRes.ok) { toast('Error: ' + (qcResult?.error || 'Failed')); return; }
     } else {
-      const res = await apiFetch('/api/qc/submit', { method: 'POST', body: JSON.stringify(body) });
-      qcResult = res.data;
-      if (!res.ok) { toast('Error: ' + (qcResult?.error || 'Failed')); return; }
+      res = await apiFetch('/api/qc/submit', { method: 'POST', body: JSON.stringify(body) });
     }
-    toast(qcResult?.message || 'Quality Circle Project submitted!');
+
+    const result = res.ok ? await res.json() : null;
+    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
+    toast(result.message);
     e.target.reset();
     teamMembers = [];
     photoFile = null;
@@ -413,10 +412,10 @@ async function renderBehavioralForm(container) {
     }
   } catch {}
   const operatorOptions = operators.length
-    ? operators.map(o => `<option value="${o.id}">${esc(o.full_name)} (${esc(o.employee_id)})</option>`).join('')
+    ? operators.map(function(o) { return '<option value="' + (o.id) + '">' + (esc(o.full_name)) + ' (' + (esc(o.employee_id)) + ')</option>'; }).join('')
     : '<option value="">No operators available</option>';
   const hrOptions = hrUsers.length
-    ? hrUsers.map(h => `<option value="${h.id}">${esc(h.full_name)} (${esc(h.employee_id)})</option>`).join('')
+    ? hrUsers.map(function(h) { return '<option value="' + (h.id) + '">' + (esc(h.full_name)) + ' (' + (esc(h.employee_id)) + ')</option>'; }).join('')
     : '<option value="">No HR approvers available</option>';
 
   container.innerHTML = `
@@ -469,21 +468,20 @@ async function renderBehavioralForm(container) {
       if (body[k] !== undefined) body[k] = parseInt(body[k]);
     });
 
-    let behResult;
+    let res;
     if (photoFile) {
       const formData = buildMultipartForm(body, photoFile);
-      const rawRes = await fetch('/api/behavioral/evaluate', {
+      res = await fetch('/api/behavioral/evaluate', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
         body: formData
       });
-      behResult = await rawRes.json().catch(() => ({}));
-      if (!rawRes.ok) { toast('Error: ' + (behResult?.error || 'Failed')); return; }
     } else {
-      const res = await apiFetch('/api/behavioral/evaluate', { method: 'POST', body: JSON.stringify(body) });
-      behResult = res.data;
-      if (!res.ok) { toast('Error: ' + (behResult?.error || 'Failed')); return; }
+      res = await apiFetch('/api/behavioral/evaluate', { method: 'POST', body: JSON.stringify(body) });
     }
+
+    const result = res.ok ? await res.json() : null;
+    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast('Behavioral evaluation submitted!');
     e.target.reset();
     photoFile = null;

@@ -56,7 +56,7 @@ export async function renderLearning(container) {
   if (fileInput && fileNameEl) {
     fileInput.addEventListener('change', () => {
       const f = fileInput.files[0];
-      fileNameEl.textContent = f ? `Selected: ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)` : '';
+      fileNameEl.textContent = f ? 'Selected: ' + (f.name) + ' (' + ((f.size / 1024 / 1024).toFixed(2)) + ' MB)' : '';
     });
   }
 
