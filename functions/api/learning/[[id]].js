@@ -1,68 +1,61 @@
-import { json, err, auditLog, getClientIP } from '../_utils.js';
-import { deleteAttachment } from '../../lib/upload.js';
+import { json, err } from '../_utils.js';
 
-// PUT /api/learning/[id] — Admin edit material (title, description, category)
-// DELETE /api/learning/[id] — Admin soft-delete (is_active = 0)
+// PUT /api/learning/[id] — Toggle is_active or edit material
+// DELETE /api/learning/[id] — Hard delete material + R2 file
 export async function onRequestPut({ request, env, data }) {
   const user = data.user;
   if (user.role !== 'Admin') return err('Only Admin can edit materials', 403);
 
-  const id = parseInt(data.params.id);
-  if (!id) return err('Invalid material ID', 400);
+  const rawId = data.params.id;
+  const id = parseInt(Array.isArray(rawId) ? rawId[0] : rawId);
+  if (!id || isNaN(id)) return err('Invalid material ID', 400);
 
   let body;
   try { body = await request.json(); } catch {
     return err('Invalid JSON', 400);
   }
 
-  const { title, description, category, is_active } = body;
-  const validCategories = ['Safety', 'Quality', 'Kaizen', 'QC Circle', 'Behavioral', 'General'];
+  const { is_active } = body;
 
-  // Handle is_active toggle separately
-  if (is_active !== undefined && Object.keys(body).length === 1) {
+  // Handle is_active toggle
+  if (is_active !== undefined) {
     try {
-      await env.DB.prepare(`UPDATE learning_materials SET is_active = ? WHERE id = ?`)
-        .bind(is_active ? 1 : 0, id).run();
-      await auditLog(env, user, is_active ? 'learning_activate' : 'learning_deactivate',
-        'learning_material', id, {}, getClientIP(request));
-      return json({ message: is_active ? 'Material activated' : 'Material deactivated' });
+      const val = is_active ? 1 : 0;
+      await env.DB.prepare(
+        'UPDATE learning_materials SET is_active = ? WHERE id = ?'
+      ).bind(val, id).run();
+      return json({ message: val === 1 ? 'Material activated' : 'Material deactivated' });
     } catch (e) {
       return err('Database error: ' + e.message, 500);
     }
   }
 
-  if (title !== undefined) {
-    if (typeof title !== 'string' || title.trim().length < 3) {
-      return err('Title must be at least 3 characters', 400);
-    }
-  }
+  // Handle title/description/category edit
+  const { title, description, category } = body;
+  const validCategories = ['Safety', 'Quality', 'Kaizen', 'QC Circle', 'Behavioral', 'General'];
 
+  if (title !== undefined && (typeof title !== 'string' || title.trim().length < 3)) {
+    return err('Title must be at least 3 characters', 400);
+  }
   if (category !== undefined && !validCategories.includes(category)) {
-    return err(`Category must be one of: ${validCategories.join(', ')}`, 400);
+    return err('Invalid category', 400);
   }
 
   try {
     const existing = await env.DB.prepare(
-      `SELECT * FROM learning_materials WHERE id = ? AND is_active = 1`
+      'SELECT * FROM learning_materials WHERE id = ?'
     ).bind(id).first();
-
     if (!existing) return err('Material not found', 404);
 
-    const newTitle = (title !== undefined) ? title.trim() : existing.title;
-    const newDescription = (description !== undefined) ? (description === '' ? null : description.trim()) : existing.description;
-    const newCategory = (category !== undefined) ? category : existing.category;
+    const newTitle = title !== undefined ? title.trim() : existing.title;
+    const newDesc = description !== undefined ? (description || null) : existing.description;
+    const newCat = category !== undefined ? category : existing.category;
 
-    await env.DB.prepare(`
-      UPDATE learning_materials
-      SET title = ?, description = ?, category = ?
-      WHERE id = ?
-    `).bind(newTitle, newDescription, newCategory, id).run();
-
-    await auditLog(env, user, 'learning_edit', 'learning_material', id,
-      { title: newTitle, category: newCategory }, getClientIP(request));
+    await env.DB.prepare(
+      'UPDATE learning_materials SET title = ?, description = ?, category = ? WHERE id = ?'
+    ).bind(newTitle, newDesc, newCat, id).run();
 
     return json({ message: 'Material updated successfully', id });
-
   } catch (e) {
     return err('Database error: ' + e.message, 500);
   }
@@ -72,29 +65,28 @@ export async function onRequestDelete({ request, env, data }) {
   const user = data.user;
   if (user.role !== 'Admin') return err('Only Admin can delete materials', 403);
 
-  const id = parseInt(data.params.id);
-  if (!id) return err('Invalid material ID', 400);
+  const rawId = data.params.id;
+  const id = parseInt(Array.isArray(rawId) ? rawId[0] : rawId);
+  if (!id || isNaN(id)) return err('Invalid material ID', 400);
 
   try {
     const existing = await env.DB.prepare(
-      `SELECT * FROM learning_materials WHERE id = ?`
+      'SELECT id, title, file_url FROM learning_materials WHERE id = ?'
     ).bind(id).first();
 
     if (!existing) return err('Material not found', 404);
 
-    // Hard delete: remove R2 file first, then DB row
-    if (existing.file_url) {
+    // Delete R2 file silently - don't crash if it fails
+    if (existing.file_url && env.ATTACHMENTS) {
       try { await env.ATTACHMENTS.delete(existing.file_url); } catch {}
     }
 
+    // Delete DB record
     await env.DB.prepare(
-      `DELETE FROM learning_materials WHERE id = ?`
+      'DELETE FROM learning_materials WHERE id = ?'
     ).bind(id).run();
 
-    await auditLog(env, user, 'learning_delete', 'learning_material', id,
-      { title: existing.title, file_url: existing.file_url }, getClientIP(request));
-
-    return json({ message: 'Material deleted successfully' });
+    return json({ message: 'Material "' + existing.title + '" deleted successfully' });
 
   } catch (e) {
     return err('Database error: ' + e.message, 500);

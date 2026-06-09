@@ -120,13 +120,13 @@ export async function renderLearning(container) {
               <div class="sub-meta">${fmtDate(m.created_at)} · ${esc(m.category)} · ${formatSize(m.file_size)}</div>
               ${m.description ? '<div class="sub-excerpt" style="margin-top:4px">' + (esc(m.description)) + '</div>' : ''}
               <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <a href="${downloadUrl}" download="${esc(m.file_name || m.title)}" class="btn-primary" style="padding:6px 14px;font-size:13px;text-decoration:none;display:inline-block">
+                <button onclick="authDownload('${downloadUrl}','${esc(m.file_name || m.title)}')" class="btn-primary" style="padding:6px 14px;font-size:13px;cursor:pointer;border:none">
                   Download ${isPdf ? 'PDF' : isImage ? 'Image' : isVideo ? 'Video' : 'File'}
-                </a>
+                </button>
                 <span style="font-size:12px;color:var(--charcoal-xlight)">${esc(m.file_name || '')}</span>
               </div>
             </div>
-            ${isImage ? '<div style="flex-shrink:0"><a href="' + (downloadUrl) + '" target="_blank" download><img src="' + (downloadUrl) + '" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer"/></a></div>' : ''}
+            ${isImage ? '<div style="flex-shrink:0"><img class="auth-img" data-src="' + downloadUrl + '" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onclick="authDownload(\'' + downloadUrl + '\',\'' + esc(m.file_name || m.title) + '\')"/></div>' : ''}
           </div>
           ${isAdmin ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px">
             <button class="btn btn-sm" style="background:${m.is_active==1?'#991b1b':'#1d4ed8'};color:#fff" onclick="adminToggleLearning(${m.id},${m.is_active})">${m.is_active==1?'Deactivate':'Activate'}</button>
@@ -135,6 +135,7 @@ export async function renderLearning(container) {
         </div>
       `;
     }).join('');
+    setTimeout(function() { if (window.loadAuthImages) window.loadAuthImages(); }, 100);
   }
 
   loadMaterials('');
@@ -159,4 +160,41 @@ window.adminToggleLearning = async function(id, currentStatus) {
   const res = await apiFetch(`/api/learning/${id}`, { method: 'PUT', body: JSON.stringify({ is_active: newStatus }) });
   if (res.ok) { toast(newStatus == 1 ? 'Activated' : 'Deactivated'); window.loadMaterials && window.loadMaterials(''); }
   else toast(res.data?.error || 'Toggle failed');
+};
+
+// Authenticated download - uses auth token then triggers save
+window.authDownload = async function(url, filename) {
+  try {
+    const token = localStorage.getItem('authToken') || '';
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) { 
+      if (typeof toast !== 'undefined') toast('Download failed: ' + res.status);
+      return; 
+    }
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || 'download';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  } catch (e) {
+    if (typeof toast !== 'undefined') toast('Download error: ' + e.message);
+  }
+};
+
+// Load R2 images with auth token
+window.loadAuthImages = function() {
+  document.querySelectorAll('img.auth-img[data-src]').forEach(async function(img) {
+    if (img.src && img.src !== window.location.href) return; // already loaded
+    try {
+      const token = localStorage.getItem('authToken') || '';
+      const res = await fetch(img.dataset.src, { headers: { 'Authorization': 'Bearer ' + token } });
+      if (res.ok) {
+        const blob = await res.blob();
+        img.src = URL.createObjectURL(blob);
+        img.removeAttribute('data-src');
+      }
+    } catch {}
+  });
 };
