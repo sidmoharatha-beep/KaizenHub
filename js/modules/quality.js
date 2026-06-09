@@ -86,7 +86,7 @@ export async function renderQualitySubmit(container) {
       });
     }
 
-    const result = res.ok ? await res.json() : null;
+    const result = res.ok ? res.data : null;
     if (!res.ok) {
       toast('Error: ' + (result?.error || 'Failed to submit'));
       return;

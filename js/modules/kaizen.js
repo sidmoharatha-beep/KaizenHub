@@ -93,9 +93,8 @@ function renderNewKaizenForm(container, managerOptions) {
     body.approver_id = parseInt(body.approver_id);
 
     const res = await apiFetch('/api/kaizen/submit', { method: 'POST', body: JSON.stringify(body) });
-    const result = res.ok ? await res.json() : null;
-    if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
-    toast(result.message);
+    if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
+    toast(res.data.message);
     e.target.reset();
     // Re-render to check for approved kaizen
     renderKaizenSubmit(container);
@@ -196,7 +195,10 @@ function renderImplementationForm(container, kaizen, coImplOptions, evalOptions)
       body: formData
     });
 
-    const result = res.ok ? await res.json() : null;
+    let result;
+    if (res.ok) {
+      try { result = await res.json(); } catch { result = {}; }
+    }
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast(result.message);
     photoFile = null;

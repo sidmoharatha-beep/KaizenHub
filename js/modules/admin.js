@@ -346,7 +346,7 @@ window.dmDeleteOne = async function(type, id, label) {
     renderDataManager();
     // Refresh the record list
     const container = document.getElementById('dm-records');
-    if (container.innerHTML) dmViewRecords(type, label);
+    if (container && container.innerHTML) dmViewRecords(type, label);
   } else {
     toast(res.data?.error || 'Delete failed');
   }

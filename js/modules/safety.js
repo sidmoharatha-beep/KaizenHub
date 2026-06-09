@@ -377,7 +377,12 @@ async function renderQCForm(container) {
       res = await apiFetch('/api/qc/submit', { method: 'POST', body: JSON.stringify(body) });
     }
 
-    const result = res.ok ? await res.json() : null;
+    let result;
+    if (photoFile) {
+      try { result = await res.json(); } catch { result = {}; }
+    } else {
+      result = res.data;
+    }
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast(result.message);
     e.target.reset();
@@ -480,7 +485,12 @@ async function renderBehavioralForm(container) {
       res = await apiFetch('/api/behavioral/evaluate', { method: 'POST', body: JSON.stringify(body) });
     }
 
-    const result = res.ok ? await res.json() : null;
+    let result;
+    if (photoFile) {
+      try { result = await res.json(); } catch { result = {}; }
+    } else {
+      result = res.data;
+    }
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast('Behavioral evaluation submitted!');
     e.target.reset();

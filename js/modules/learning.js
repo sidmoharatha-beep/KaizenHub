@@ -79,7 +79,8 @@ export async function renderLearning(container) {
       headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
       body: formData
     });
-    const result = res.ok ? await res.json() : null;
+    let result;
+    try { result = await res.json(); } catch { result = {}; }
     if (!res.ok) { toast('Error: ' + (result?.error || 'Failed')); return; }
     toast('Material uploaded!');
     e.target.reset();
