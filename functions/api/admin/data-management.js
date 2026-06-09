@@ -115,7 +115,10 @@ export async function onRequestDelete({ request, env, data }) {
       }
 
       const result = await env.DB.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).bind(id).run();
-      if (!result.meta.changes) return err('Record not found', 404);
+      if (!result.meta?.changes && result.meta?.changes !== 0) {
+        // changes might be undefined on some D1 versions - just proceed
+      }
+      if (result.meta?.changes === 0) return err('Record not found', 404);
 
       await auditLog(env, data.user, `admin_delete_${type}`, cfg.table, id, {}, getClientIP(request));
       return json({ success: true, message: `Deleted ${cfg.label} #${id}` });

@@ -15,8 +15,21 @@ export async function onRequestPut({ request, env, data }) {
     return err('Invalid JSON', 400);
   }
 
-  const { title, description, category } = body;
+  const { title, description, category, is_active } = body;
   const validCategories = ['Safety', 'Quality', 'Kaizen', 'QC Circle', 'Behavioral', 'General'];
+
+  // Handle is_active toggle separately
+  if (is_active !== undefined && Object.keys(body).length === 1) {
+    try {
+      await env.DB.prepare(`UPDATE learning_materials SET is_active = ? WHERE id = ?`)
+        .bind(is_active ? 1 : 0, id).run();
+      await auditLog(env, user, is_active ? 'learning_activate' : 'learning_deactivate',
+        'learning_material', id, {}, getClientIP(request));
+      return json({ message: is_active ? 'Material activated' : 'Material deactivated' });
+    } catch (e) {
+      return err('Database error: ' + e.message, 500);
+    }
+  }
 
   if (title !== undefined) {
     if (typeof title !== 'string' || title.trim().length < 3) {
@@ -64,7 +77,7 @@ export async function onRequestDelete({ request, env, data }) {
 
   try {
     const existing = await env.DB.prepare(
-      `SELECT * FROM learning_materials WHERE id = ? AND is_active = 1`
+      `SELECT * FROM learning_materials WHERE id = ? `
     ).bind(id).first();
 
     if (!existing) return err('Material not found', 404);
