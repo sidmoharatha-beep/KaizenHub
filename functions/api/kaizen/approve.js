@@ -24,8 +24,8 @@ export const onRequestPost = async ({ request, env, data }) => {
   ).bind(id).first();
 
   if (!kaizen) return err('Kaizen idea not found', 404);
-  if (kaizen.status !== 'Submitted') {
-    return err(`Cannot approve a kaizen with status: ${kaizen.status}. Must be Submitted.`, 400);
+  if (!['Submitted', 'Screened'].includes(kaizen.status)) {
+    return err(`Cannot approve a kaizen with status: ${kaizen.status}. Must be Submitted or Screened.`, 400);
   }
 
   if (user.role === 'Manager' && kaizen.approver_id !== user.id) {

@@ -9,7 +9,12 @@ async function getApprovedKaizenForUser() {
   try {
     const res = await apiFetch('/api/kaizen/submit?status=Approved');
     if (res.ok && res.data?.submissions?.length > 0) {
-      const myApproved = res.data.submissions.filter(k => k.user_id === res.data.currentUserId);
+      // API already filters by the logged-in user for Operator role;
+      // use currentUserId if available as an extra guard
+      const uid = res.data.currentUserId;
+      const myApproved = uid
+        ? res.data.submissions.filter(k => k.user_id === uid)
+        : res.data.submissions;
       return myApproved.length > 0 ? myApproved[0] : null;
     }
   } catch {}

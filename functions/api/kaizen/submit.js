@@ -226,6 +226,7 @@ export async function onRequestGet({ request, env, data }) {
 
     return json({
       submissions: results,
+      currentUserId: user.id,
       pagination: {
         page, per_page: perPage,
         total: countResult?.total || 0,

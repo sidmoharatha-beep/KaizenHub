@@ -85,13 +85,45 @@ export async function onRequestDelete({ request, env, data }) {
 
   const cfg = ALLOWED_TYPES[type];
 
+  // Child tables that must be cleared before parent (FK constraints)
+  const childDependencies = {
+    kaizen:     ['kaizen_implementations', 'kaizen_evaluations', 'approval_workflows'],
+    kaizen_impl:['kaizen_evaluations'],
+    qc:         ['quality_circle_members', 'qc_12step_scores', 'qc_final_evaluations'],
+    safety:     [], quality: [], behavioral: [], learning: [], rewards: [], notifications: [],
+  };
+
+  // Source types in reward_transactions per module (for leaderboard recalc)
+  const rewardSources = {
+    safety:     ['safety'],
+    quality:    ['quality'],
+    kaizen:     ['kaizen_approval', 'kaizen_implementation'],
+    kaizen_impl:['kaizen_implementation'],
+    qc:         ['qc', 'qc_registration'],
+    behavioral: ['behavioral', 'well_done', 'great_job'],
+  };
+
   try {
     if (clearAll) {
-      // Count first for audit
       const before = await env.DB.prepare(`SELECT COUNT(*) as c FROM ${cfg.table}`).first();
+
+      // Delete FK children first to avoid constraint errors
+      for (const childTable of (childDependencies[type] || [])) {
+        try { await env.DB.prepare(`DELETE FROM ${childTable}`).run(); } catch {}
+      }
+
       await env.DB.prepare(`DELETE FROM ${cfg.table}`).run();
 
-      // Also clear related R2 files for learning
+      // Wipe related reward_transactions so leaderboard reflects reality
+      for (const st of (rewardSources[type] || [])) {
+        try { await env.DB.prepare(`DELETE FROM reward_transactions WHERE source_type = ?`).bind(st).run(); } catch {}
+      }
+      // Rebuild leaderboard_cache from remaining reward_transactions
+      if (rewardSources[type]?.length > 0) {
+        try { await env.DB.prepare(`DELETE FROM leaderboard_cache`).run(); } catch {}
+      }
+
+      // Clear R2 files for learning
       if (type === 'learning') {
         try {
           const listed = await env.ATTACHMENTS.list({ prefix: 'learning/' });
@@ -106,7 +138,7 @@ export async function onRequestDelete({ request, env, data }) {
 
       return json({ success: true, message: `Cleared ${before?.c || 0} records from ${cfg.label}` });
     } else {
-      // Delete single record — also delete R2 file if learning
+      // Delete single record
       if (type === 'learning') {
         try {
           const rec = await env.DB.prepare(`SELECT file_url FROM learning_materials WHERE id = ?`).bind(id).first();
@@ -114,10 +146,19 @@ export async function onRequestDelete({ request, env, data }) {
         } catch {}
       }
 
-      const result = await env.DB.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).bind(id).run();
-      if (!result.meta?.changes && result.meta?.changes !== 0) {
-        // changes might be undefined on some D1 versions - just proceed
+      // For kaizen, delete children first
+      if (type === 'kaizen') {
+        try { await env.DB.prepare(`DELETE FROM kaizen_implementations WHERE kaizen_id = ?`).bind(id).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM kaizen_evaluations WHERE kaizen_id = ?`).bind(id).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM approval_workflows WHERE entity_type = 'kaizen_idea' AND entity_id = ?`).bind(id).run(); } catch {}
       }
+      if (type === 'qc') {
+        try { await env.DB.prepare(`DELETE FROM quality_circle_members WHERE project_id = ?`).bind(id).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM qc_12step_scores WHERE project_id = ?`).bind(id).run(); } catch {}
+        try { await env.DB.prepare(`DELETE FROM qc_final_evaluations WHERE project_id = ?`).bind(id).run(); } catch {}
+      }
+
+      const result = await env.DB.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).bind(id).run();
       if (result.meta?.changes === 0) return err('Record not found', 404);
 
       await auditLog(env, data.user, `admin_delete_${type}`, cfg.table, id, {}, getClientIP(request));
