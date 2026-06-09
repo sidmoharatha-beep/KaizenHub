@@ -77,17 +77,22 @@ export async function onRequestDelete({ request, env, data }) {
 
   try {
     const existing = await env.DB.prepare(
-      `SELECT * FROM learning_materials WHERE id = ? `
+      `SELECT * FROM learning_materials WHERE id = ?`
     ).bind(id).first();
 
     if (!existing) return err('Material not found', 404);
 
+    // Hard delete: remove R2 file first, then DB row
+    if (existing.file_url) {
+      try { await env.ATTACHMENTS.delete(existing.file_url); } catch {}
+    }
+
     await env.DB.prepare(
-      `UPDATE learning_materials SET is_active = 0 WHERE id = ?`
+      `DELETE FROM learning_materials WHERE id = ?`
     ).bind(id).run();
 
     await auditLog(env, user, 'learning_delete', 'learning_material', id,
-      { title: existing.title }, getClientIP(request));
+      { title: existing.title, file_url: existing.file_url }, getClientIP(request));
 
     return json({ message: 'Material deleted successfully' });
 
