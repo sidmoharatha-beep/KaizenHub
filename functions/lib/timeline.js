@@ -1,14 +1,14 @@
 const RULES = {
-  kaizen_submission: { start: 1, end: 28 },
-  kaizen_screening: { start: 29, end: 31 },
-  kaizen_eval: { start: 15, end: 20, monthOffset: 1 },
-  behavioral_eval: { start: 29, end: 31 },
-  hr_approval: { start: 1, end: 5, monthOffset: 1 },
-  qc_screening: { start: 22, end: 31, quarterEnd: true },
-  qc_panel: { start: 1, end: 15, quarterStart: true }
+  kaizen_submission: { start: 1, end: 31 },
+  kaizen_screening: { start: 1, end: 31 },
+  kaizen_eval: { start: 1, end: 31 },
+  behavioral_eval: { start: 1, end: 31 },
+  hr_approval: { start: 1, end: 31 },
+  qc_screening: { start: 1, end: 31, quarterEnd: true },
+  qc_panel: { start: 1, end: 31, quarterStart: true }
 };
 
-export const isWithinWindow = (module) => {
+export function isWithinWindow(module) {
   const rule = RULES[module];
   if (!rule) return { allowed: true, message: 'No timeline restriction' };
 
