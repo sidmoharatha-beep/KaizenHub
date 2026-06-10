@@ -36,8 +36,8 @@ export const onRequestPost = async ({ request, env, data }) => {
   ).bind(kaizen_id).first();
 
   if (!kaizen) return err('Kaizen idea not found', 404);
-  if (kaizen.status !== 'Pending Evaluation') {
-    return err(`Cannot evaluate a kaizen with status: ${kaizen.status}. Must be Pending Evaluation.`, 400);
+  if (kaizen.status !== 'Evaluated') {
+    return err(`Cannot evaluate a kaizen with status: ${kaizen.status}. Must be in Evaluated status.`, 400);
   }
 
   // Enforce: only the selected evaluator can submit scores
@@ -149,7 +149,7 @@ export async function onRequestGet({ request, env, data }) {
         (SELECT id FROM kaizen_evaluations WHERE kaizen_id = k.id AND evaluator_id = ?) as my_eval
       FROM kaizen_ideas k
       JOIN users u ON k.user_id = u.id
-      WHERE k.status = 'Pending Evaluation' AND k.selected_evaluator_id = ?
+      WHERE k.status = 'Evaluated' AND k.selected_evaluator_id = ?
       ORDER BY k.created_at DESC LIMIT ? OFFSET ?
     `).bind(user.id, user.id, perPage, offset).all();
 
