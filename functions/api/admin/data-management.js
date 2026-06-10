@@ -134,8 +134,8 @@ export async function onRequestDelete({ request, env, data }) {
         } catch {}
       }
 
-      await auditLog(env, data.user, `admin_clear_${type}`, cfg.table, null,
-        { cleared: before?.c || 0 }, getClientIP(request));
+      try { await auditLog(env, data.user, 'admin_clear_' + type, cfg.table, 0,
+        { cleared: before?.c || 0 }, getClientIP(request)); } catch {}
 
       return json({ success: true, message: `Cleared ${before?.c || 0} records from ${cfg.label}` });
     } else {
@@ -169,8 +169,8 @@ export async function onRequestDelete({ request, env, data }) {
       const result = await env.DB.prepare(`DELETE FROM ${cfg.table} WHERE id = ?`).bind(idInt).run();
       if (result.meta?.changes === 0) return err('Record not found', 404);
 
-      await auditLog(env, data.user, `admin_delete_${type}`, cfg.table, idInt, {}, getClientIP(request));
-      return json({ success: true, message: `Deleted ${cfg.label} #${id}` });
+      try { await auditLog(env, data.user, 'admin_delete_' + type, cfg.table, idInt || 0, {}, getClientIP(request)); } catch {}
+      return json({ success: true, message: 'Deleted ' + cfg.label + ' #' + id });
     }
   } catch (e) {
     return err('DB error: ' + e.message, 500);

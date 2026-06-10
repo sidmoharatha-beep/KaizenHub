@@ -275,7 +275,16 @@ window.reviewAction = async function(type, id, action) {
   const res = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
   if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
 
-  toast(action === 'Approved' ? 'Approved!' : 'Rejected');
+  // Show correct message based on action (handles both lowercase and Capitalized)
+  const actionLower = action.toLowerCase();
+  let msg = res.data?.message;
+  if (!msg) {
+    if (actionLower === 'screen')   msg = '✅ Kaizen screened successfully!';
+    else if (actionLower === 'approve' || action === 'Approved') msg = '✅ Approved!';
+    else if (actionLower === 'reject' || action === 'Rejected')  msg = '❌ Rejected';
+    else msg = action + ' successful';
+  }
+  toast(msg);
   // Reload the active tab
   const activeTab = document.querySelector('#review-tabs .tab-btn.active');
   if (activeTab) activeTab.click();
