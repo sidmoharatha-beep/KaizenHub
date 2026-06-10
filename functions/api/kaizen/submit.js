@@ -45,11 +45,11 @@ export async function onRequestPost({ request, env, data }) {
     if (kaizen.status !== 'Approved') {
       return err(`Cannot submit implementation for status: ${kaizen.status}. Must be Approved.`, 400);
     }
-    const isOwner  = String(kaizen.user_id) === String(user.id);
-    const isCoImpl = kaizen.co_implementor_id !== null && String(kaizen.co_implementor_id) === String(user.id);
-    const isAdmin  = user.role === 'Admin';
+    const isOwner  = parseInt(kaizen.user_id) === parseInt(user.id);
+    const isCoImpl = kaizen.co_implementor_id !== null && parseInt(kaizen.co_implementor_id) === parseInt(user.id);
+    const isAdmin  = ['Admin', 'Manager'].includes(user.role);
     if (!isOwner && !isCoImpl && !isAdmin) {
-      return err(`Permission denied: kaizen owner=${kaizen.user_id}, you=${user.id}`, 403);
+      return err('Permission denied: only the kaizen owner, co-implementor, or manager can submit implementation', 403);
     }
 
     const implMode = implementation_mode || 'self';
@@ -199,8 +199,8 @@ export async function onRequestGet({ request, env, data }) {
   let whereClause, params = [];
 
   if (isReviewer) {
-    whereClause = user.role === 'Manager' ? 'k.approver_id = ?' : '1=1';
-    if (user.role === 'Manager') params.push(user.id);
+    // Managers see all kaizens in the system (not just ones assigned to them)
+    whereClause = '1=1';
   } else {
     whereClause = 'k.user_id = ?';
     params.push(user.id);

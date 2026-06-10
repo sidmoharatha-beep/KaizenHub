@@ -17,6 +17,7 @@ export async function renderAdmin() {
       <button class="tab-btn" data-tab="create" onclick="switchAdminTab('create')" style="padding:8px 14px">Create User</button>
       <button class="tab-btn" data-tab="audit" onclick="switchAdminTab('audit')" style="padding:8px 14px">Audit Trail</button>
       <button class="tab-btn" data-tab="data" onclick="switchAdminTab('data')" style="padding:8px 14px;background:#7f1d1d;color:#fff;border-radius:6px">🗑 Data Manager</button>
+      <button class="tab-btn" data-tab="kaizen-details" onclick="switchAdminTab('kaizen-details')" style="padding:8px 14px">⚡ Kaizen Details</button>
     </div>
     <div id="admin-analytics">
       <div class="card">
@@ -36,6 +37,7 @@ export async function renderAdmin() {
     <div id="admin-create" style="display:none"></div>
     <div id="admin-audit" style="display:none"></div>
     <div id="admin-data" style="display:none"></div>
+    <div id="admin-kaizen-details" style="display:none"></div>
   `;
   window.switchAdminTab = switchAdminTab;
 }
@@ -56,10 +58,12 @@ async function switchAdminTab(tab) {
   document.getElementById('admin-create').style.display = (tab==='create')?'':'none';
   document.getElementById('admin-audit').style.display = (tab==='audit')?'':'none';
   document.getElementById('admin-data').style.display = (tab==='data')?'':'none';
+  document.getElementById('admin-kaizen-details').style.display = (tab==='kaizen-details')?'':'none';
   if (tab==='users') await renderUserList();
   if (tab==='create') await renderCreateUser();
   if (tab==='audit') await loadAuditTrail();
   if (tab==='data') await renderDataManager();
+  if (tab==='kaizen-details') await renderKaizenDetails();
 }
 
 /* ---------- User List ---------- */
@@ -349,4 +353,128 @@ window.dmDeleteOne = async function(type, id, label) {
   } else {
     toast(res.data?.error || 'Delete failed');
   }
+};
+
+/* ---------- Kaizen Details (Admin Only) ---------- */
+const KAIZEN_STATUSES = ['', 'Submitted', 'Screened', 'Approved', 'Implemented', 'Evaluated', 'Closed', 'Rejected'];
+
+async function renderKaizenDetails(status, page) {
+  status = status || '';
+  page = page || 1;
+  const el = document.getElementById('admin-kaizen-details');
+  el.innerHTML = '<div class="loading">Loading kaizen data...</div>';
+
+  const url = '/api/admin/kaizen-details?page=' + page + (status ? '&status=' + encodeURIComponent(status) : '');
+  const res = await apiFetch(url);
+  if (!res.ok) { el.innerHTML = '<div class="empty">Error loading kaizen data</div>'; return; }
+
+  const { submissions, total, total_pages } = res.data;
+
+  let html = '<p class="section-label" style="margin-top:0">All Kaizen Submissions (' + total + ' total)</p>';
+
+  // Status filter buttons
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+  KAIZEN_STATUSES.forEach(function(s) {
+    const active = s === status;
+    html += '<button onclick="renderKaizenDetails(\'' + s + '\',1)" class="tab-btn' + (active ? ' active' : '') + '" style="padding:4px 10px;font-size:12px">' + (s || 'All') + '</button>';
+  });
+  html += '</div>';
+
+  if (!submissions.length) {
+    el.innerHTML = html + '<div class="empty">No kaizen submissions found.</div>';
+    return;
+  }
+
+  // Table
+  html += '<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">';
+  html += '<thead><tr style="background:var(--surface);border-bottom:2px solid var(--border)">' +
+    '<th style="padding:8px;text-align:left">ID</th>' +
+    '<th style="padding:8px;text-align:left">Title</th>' +
+    '<th style="padding:8px;text-align:left">Submitted By</th>' +
+    '<th style="padding:8px;text-align:left">Department</th>' +
+    '<th style="padding:8px;text-align:left">Approver</th>' +
+    '<th style="padding:8px;text-align:left">Status</th>' +
+    '<th style="padding:8px;text-align:left">Score</th>' +
+    '<th style="padding:8px;text-align:left">Points</th>' +
+    '<th style="padding:8px;text-align:left">Date</th>' +
+    '<th style="padding:8px;text-align:center">Details</th>' +
+    '</tr></thead><tbody>';
+
+  submissions.forEach(function(k) {
+    html += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:8px">#' + k.id + '</td>' +
+      '<td style="padding:8px;font-weight:600">' + esc(k.title) + '</td>' +
+      '<td style="padding:8px">' + esc(k.submitter_name || '') + '<br><span style="font-size:11px;color:var(--muted)">' + esc(k.submitter_emp_id || '') + '</span></td>' +
+      '<td style="padding:8px">' + esc(k.department_name || '—') + '</td>' +
+      '<td style="padding:8px">' + esc(k.approver_name || '—') + '</td>' +
+      '<td style="padding:8px">' + statusBadge(k.status) + '</td>' +
+      '<td style="padding:8px;text-align:center">' + (k.total_score > 0 ? '<strong>' + k.total_score + '/15</strong>' : '—') + '</td>' +
+      '<td style="padding:8px;text-align:center">' + (k.approval_reward > 0 ? '<span style="color:var(--green);font-weight:600">+' + k.approval_reward + '</span>' : '—') + '</td>' +
+      '<td style="padding:8px;white-space:nowrap;font-size:11px">' + fmtDate(k.created_at) + '</td>' +
+      '<td style="padding:8px;text-align:center"><button class="btn btn-sm" style="background:var(--navy);color:#fff" onclick="viewKaizenDetail(' + k.id + ')">View</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Pagination
+  if (total_pages > 1) {
+    html += '<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;align-items:center">';
+    if (page > 1) html += '<button class="btn-secondary" onclick="renderKaizenDetails(\'' + status + '\',' + (page-1) + ')">← Prev</button>';
+    html += '<span style="font-size:13px">Page ' + page + ' / ' + total_pages + '</span>';
+    if (page < total_pages) html += '<button class="btn-secondary" onclick="renderKaizenDetails(\'' + status + '\',' + (page+1) + ')">Next →</button>';
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+window.renderKaizenDetails = renderKaizenDetails;
+
+window.viewKaizenDetail = async function(id) {
+  const res = await apiFetch('/api/admin/kaizen-details?id=' + id);
+  if (!res.ok) { toast('Error loading details'); return; }
+  const k = res.data.kaizen;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;overflow-y:auto;padding:20px';
+  modal.innerHTML = '<div style="background:var(--bg);border-radius:12px;max-width:600px;margin:0 auto;padding:20px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+    '<h3 style="margin:0">Kaizen #' + k.id + ' — ' + esc(k.title) + '</h3>' +
+    '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button></div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">' +
+    '<div><div style="font-size:11px;color:var(--muted)">Submitted By</div><div style="font-weight:600">' + esc(k.submitter_name || '—') + ' (' + esc(k.submitter_emp_id || '') + ')</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Department</div><div>' + esc(k.department_name || '—') + '</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Approver</div><div>' + esc(k.approver_name || '—') + '</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Evaluator</div><div>' + esc(k.evaluator_name || '—') + '</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Status</div><div>' + statusBadge(k.status) + '</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Category</div><div>' + esc(k.category || '—') + '</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Submitted</div><div>' + fmtDate(k.created_at) + '</div></div>' +
+    '<div><div style="font-size:11px;color:var(--muted)">Points Earned</div><div style="font-weight:600;color:var(--green)">' + (k.approval_reward > 0 ? '+' + k.approval_reward + ' pts' : '—') + '</div></div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Description</div><div style="background:var(--surface);padding:10px;border-radius:8px;font-size:13px">' + esc(k.description || k.problem || '—') + '</div></div>' +
+
+    (k.before_after ? '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Before / After</div><div style="background:var(--surface);padding:10px;border-radius:8px;font-size:13px">' + esc(k.before_after) + '</div></div>' : '') +
+
+    (k.expected_impact ? '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Expected Impact</div><div style="background:var(--surface);padding:10px;border-radius:8px;font-size:13px">' + esc(k.expected_impact) + '</div></div>' : '') +
+
+    (k.tangible_benefits ? '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Tangible Benefits</div><div style="background:var(--surface);padding:10px;border-radius:8px;font-size:13px">' + esc(k.tangible_benefits) + '</div></div>' : '') +
+
+    (k.evidence_url ? '<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Implementation Photo</div><img src="/api/attachments/' + esc(k.evidence_url) + '" style="max-width:100%;border-radius:8px;border:1px solid var(--border)" alt="evidence"/></div>' : '') +
+
+    (k.total_score > 0 ? '<div style="background:var(--surface);padding:12px;border-radius:8px"><div style="font-weight:600;margin-bottom:8px">Evaluation Scores (Total: ' + k.total_score + '/15)</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px">' +
+    '<div>Ease of Implementation: <strong>' + (k.ease_implementation || '—') + '/3</strong></div>' +
+    '<div>Quality Impact: <strong>' + (k.impact_quality || '—') + '/3</strong></div>' +
+    '<div>Safety Impact: <strong>' + (k.impact_safety || '—') + '/3</strong></div>' +
+    '<div>Yield Impact: <strong>' + (k.impact_yield || '—') + '/3</strong></div>' +
+    '<div>Cost Saving: <strong>' + (k.cost_saving || '—') + '/3</strong></div>' +
+    '</div>' +
+    (k.eval_comment ? '<div style="margin-top:8px;font-size:12px;color:var(--muted)">Comment: ' + esc(k.eval_comment) + '</div>' : '') +
+    '</div>' : '') +
+    '</div>';
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
 };
