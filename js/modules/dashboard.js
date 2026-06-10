@@ -40,7 +40,7 @@ export async function renderDashboard() {
         <div class="kpi-icon">${kpiIcons.kaizen}</div>
         <div class="kpi-val">${kpi.kaizen.closed || 0}</div>
         <div class="kpi-label">Kaizen Closed</div>
-        <div class="kpi-desc">${kpi.kaizen.in_progress || 0} in progress</div>
+        <div class="kpi-desc" style="color:var(--orange)">${kpi.kaizen.points || 0} pts earned</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">${kpiIcons.qc}</div>

@@ -34,8 +34,8 @@ export async function renderKaizenSubmit(container) {
   const approved      = myKaizens.find(function(k) { return k.status === 'Approved'; });
   const screened      = myKaizens.find(function(k) { return k.status === 'Screened'; });
   const submitted     = myKaizens.find(function(k) { return k.status === 'Submitted'; });
-  const pendingEval   = myKaizens.find(function(k) { return k.status === 'Evaluated'; });
-  const evaluated     = myKaizens.find(function(k) { return k.status === 'Evaluated'; });
+  const pendingEval   = myKaizens.find(function(k) { return k.status === 'Pending Evaluation'; });
+  const evaluated     = myKaizens.find(function(k) { return k.status === 'Evaluated' || k.status === 'Closed'; });
 
   // Show status tracker for any in-progress kaizen
   const inProgress = approved || screened || submitted || pendingEval || evaluated;
@@ -58,7 +58,7 @@ export async function renderKaizenSubmit(container) {
     renderImplementationForm(container, approved, coImplOptions, evalOptions, function(f) { photoFile = f; });
   } else if (pendingEval) {
     // Waiting for evaluator
-    renderWaitingCard(container, pendingEval, '⏳', 'Awaiting Evaluation', 'Your implementation has been submitted. The evaluator will review and score it soon.', 'var(--navy)');
+    renderWaitingCard(container, pendingEval, '⏳', 'Pending Evaluation', 'Your implementation has been sent directly to the evaluator for scoring.', 'var(--navy)');
   } else if (evaluated) {
     // Waiting for manager final review
     renderWaitingCard(container, evaluated, '✅', 'Awaiting Final Review', 'Your kaizen has been evaluated! Your manager will do a final review and close it with points.', 'var(--green)');

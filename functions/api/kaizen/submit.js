@@ -86,24 +86,24 @@ export async function onRequestPost({ request, env, data }) {
         photoUrl = await uploadAttachment(env, photoFile, 'kaizen/evidence');
       }
 
-      // Insert implementation record
+      // Insert implementation record — goes straight to evaluator (no manager re-approval)
       await env.DB.prepare(`
         INSERT INTO kaizen_implementations (kaizen_id, evidence_url, implemented_by, status)
-        VALUES (?, ?, ?, 'Manager Review')
+        VALUES (?, ?, ?, 'Pending Evaluation')
       `).bind(kId, photoUrl, user.id).run();
 
-      // Update kaizen to Pending Evaluation
+      // Update kaizen to Pending Evaluation directly
       await env.DB.prepare(`
-        UPDATE kaizen_ideas SET status = 'Implemented', implementation_mode = ?, co_implementor_id = ?, selected_evaluator_id = ?
+        UPDATE kaizen_ideas SET status = 'Pending Evaluation', implementation_mode = ?, co_implementor_id = ?, selected_evaluator_id = ?
         WHERE id = ?
       `).bind(implMode, coImpId, evalId, kId).run();
 
-      // Notify manager to review implementation
+      // Notify EVALUATOR directly (skip manager re-approval step)
       await notify(env, {
-        userId: kaizen.approver_id,
+        userId: evalId,
         type: 'implementation_pending',
         title: 'Kaizen Implementation Submitted',
-        message: `Implementation evidence submitted for kaizen: "${kaizen.title}". Please review and approve before sending to evaluator.`,
+        message: `Kaizen "${kaizen.title}" has been implemented. Please evaluate it.`,
         entityType: 'kaizen_idea',
         entityId: kId
       });
@@ -111,7 +111,7 @@ export async function onRequestPost({ request, env, data }) {
       await auditLog(env, user, 'kaizen_implement', 'kaizen_idea', kId,
         { implementation_mode: implMode, co_implementor_id: coImpId, evaluator_id: evalId }, getClientIP(request));
 
-      return json({ id: kId, status: 'Implemented', message: 'Implementation submitted! Your manager will review and send it to the evaluator.' });
+      return json({ id: kId, status: 'Pending Evaluation', message: 'Implementation submitted! Sent directly to the evaluator for review.' });
     } catch (e) {
       return err('Database error: ' + e.message, 500);
     }

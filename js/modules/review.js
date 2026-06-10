@@ -13,7 +13,7 @@ export async function renderReviewQueue() {
   const canReviewSafety = ['Manager', 'Admin'].includes(role);
   const canReviewQuality = ['Manager', 'Admin'].includes(role);
   const canReviewKaizen = ['Manager', 'Admin'].includes(role);
-  const canReviewKaizenImpl = ['Manager', 'Admin'].includes(role);
+  const canReviewKaizenImpl = false; // Removed: implementation goes directly to evaluator
   const canEvaluateKaizen = ['Manager', 'Admin'].includes(role);
   const canReviewQC = ['Manager', 'QC Panel Member', 'Admin'].includes(role);
   const canReviewBehavioral = ['Manager', 'SIC', 'HR', 'Admin'].includes(role);

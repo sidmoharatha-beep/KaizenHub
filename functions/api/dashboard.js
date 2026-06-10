@@ -26,12 +26,19 @@ export async function onRequestGet({ request, env, data }) {
       FROM quality_reports${user.role === 'Manager' ? ' WHERE department_id = ?' : ''}
     `).bind(...(user.role === 'Manager' ? [user.department_id] : [])));
 
+    // For Operator: personal kaizen stats + points earned
+    // For Manager/Admin: department/global counts
+    const kaizenWhere = user.role === 'Manager' ? 'WHERE department_id = ?' :
+                        !['Admin'].includes(user.role) ? 'WHERE user_id = ?' : '';
+    const kaizenParams = user.role === 'Manager' ? [user.department_id] :
+                         !['Admin'].includes(user.role) ? [user.id] : [];
     queries.push(env.DB.prepare(`
       SELECT COUNT(*) as total,
         SUM(CASE WHEN status='Closed' THEN 1 ELSE 0 END) as closed,
-        SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected
-      FROM kaizen_ideas${user.role === 'Manager' ? ' WHERE department_id = ?' : ''}
-    `).bind(...(user.role === 'Manager' ? [user.department_id] : [])));
+        SUM(CASE WHEN status='Rejected' THEN 1 ELSE 0 END) as rejected,
+        SUM(CASE WHEN status NOT IN ('Closed','Rejected') THEN 1 ELSE 0 END) as in_progress
+      FROM kaizen_ideas ${kaizenWhere}
+    `).bind(...kaizenParams));
 
     queries.push(env.DB.prepare(`
       SELECT COUNT(*) as total,
@@ -47,8 +54,17 @@ export async function onRequestGet({ request, env, data }) {
       FROM behavioral_evaluations${user.role === 'Manager' ? ' WHERE evaluator_id = ? OR EXISTS(SELECT 1 FROM users u WHERE u.id = behavioral_evaluations.user_id AND u.department_id = ?)' : ''}
     `).bind(...(user.role === 'Manager' ? [user.id, user.department_id] : [])));
 
+    // Add kaizen points from reward_transactions (personal for Operator, global for others)
+    const kaizenPtsWhere = !['Admin','Manager'].includes(user.role) ? 'AND user_id = ?' : '';
+    const kaizenPtsParams = !['Admin','Manager'].includes(user.role) ? [user.id] : [];
+    queries.push(env.DB.prepare(`
+      SELECT COALESCE(SUM(points), 0) as points
+      FROM reward_transactions
+      WHERE source_type IN ('kaizen_approval','kaizen_implementation') ${kaizenPtsWhere}
+    `).bind(...kaizenPtsParams));
+
     const [
-      safetyRes, qualityRes, kaizenRes, qcRes, behavioralRes
+      safetyRes, qualityRes, kaizenRes, qcRes, behavioralRes, kaizenPtsRes
     ] = await env.DB.batch(queries);
 
     // 2. Overall leaderboard
@@ -106,7 +122,8 @@ export async function onRequestGet({ request, env, data }) {
       kpi: {
         safety: safetyRes.results?.[0] || { total: 0, approved: 0, pending: 0, points: 0 },
         quality: qualityRes.results?.[0] || { total: 0, approved: 0, pending: 0, points: 0 },
-        kaizen: kaizenRes.results?.[0] || { total: 0, closed: 0, rejected: 0 },
+        kaizen: { ...(kaizenRes.results?.[0] || { total: 0, closed: 0, rejected: 0, in_progress: 0 }),
+                  points: kaizenPtsRes.results?.[0]?.points || 0 },
         qc: qcRes.results?.[0] || { total: 0, closed: 0, rejected: 0 },
         behavioral: behavioralRes.results?.[0] || { total: 0, released: 0, pending: 0 }
       },
