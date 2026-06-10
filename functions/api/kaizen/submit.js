@@ -86,7 +86,7 @@ export async function onRequestPost({ request, env, data }) {
       // Insert implementation record
       await env.DB.prepare(`
         INSERT INTO kaizen_implementations (kaizen_id, evidence_url, implemented_by, status)
-        VALUES (?, ?, ?, 'Implemented')
+        VALUES (?, ?, ?, 'Manager Review')
       `).bind(kId, photoUrl, user.id).run();
 
       // Update kaizen to Pending Evaluation

@@ -32,6 +32,7 @@ export const onRequestPost = async ({ request, env, data }) => {
   if (!evalId) return err('No evaluator assigned to this kaizen', 400);
 
   await env.DB.prepare('UPDATE kaizen_ideas SET status = ? WHERE id = ?').bind('Pending Evaluation', id).run();
+  await env.DB.prepare('UPDATE kaizen_implementations SET status = ? WHERE kaizen_id = ?').bind('Completed', id).run();
 
   await notify(env, { userId: evalId, type: 'implementation_pending', title: 'Kaizen Ready for Evaluation',
     message: 'Implementation reviewed and approved. Please evaluate kaizen: "' + kaizen.title + '"',
