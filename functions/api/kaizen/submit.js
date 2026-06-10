@@ -89,12 +89,12 @@ export async function onRequestPost({ request, env, data }) {
       // Insert implementation record — goes straight to evaluator (no manager re-approval)
       await env.DB.prepare(`
         INSERT INTO kaizen_implementations (kaizen_id, evidence_url, implemented_by, status)
-        VALUES (?, ?, ?, 'Pending Evaluation')
+        VALUES (?, ?, ?, 'Pending')
       `).bind(kId, photoUrl, user.id).run();
 
-      // Update kaizen to Pending Evaluation directly
+      // Update kaizen to Implemented — awaiting evaluator scoring
       await env.DB.prepare(`
-        UPDATE kaizen_ideas SET status = 'Pending Evaluation', implementation_mode = ?, co_implementor_id = ?, selected_evaluator_id = ?
+        UPDATE kaizen_ideas SET status = 'Implemented', implementation_mode = ?, co_implementor_id = ?, selected_evaluator_id = ?
         WHERE id = ?
       `).bind(implMode, coImpId, evalId, kId).run();
 
@@ -111,7 +111,7 @@ export async function onRequestPost({ request, env, data }) {
       await auditLog(env, user, 'kaizen_implement', 'kaizen_idea', kId,
         { implementation_mode: implMode, co_implementor_id: coImpId, evaluator_id: evalId }, getClientIP(request));
 
-      return json({ id: kId, status: 'Pending Evaluation', message: 'Implementation submitted! Sent directly to the evaluator for review.' });
+      return json({ id: kId, status: 'Implemented', message: 'Implementation submitted! Sent directly to the evaluator for review.' });
     } catch (e) {
       return err('Database error: ' + e.message, 500);
     }

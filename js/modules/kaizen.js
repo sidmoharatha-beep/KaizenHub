@@ -34,7 +34,7 @@ export async function renderKaizenSubmit(container) {
   const approved      = myKaizens.find(function(k) { return k.status === 'Approved'; });
   const screened      = myKaizens.find(function(k) { return k.status === 'Screened'; });
   const submitted     = myKaizens.find(function(k) { return k.status === 'Submitted'; });
-  const pendingEval   = myKaizens.find(function(k) { return k.status === 'Pending Evaluation'; });
+  const pendingEval   = myKaizens.find(function(k) { return k.status === 'Implemented'; });
   const evaluated     = myKaizens.find(function(k) { return k.status === 'Evaluated' || k.status === 'Closed'; });
 
   // Show status tracker for any in-progress kaizen
