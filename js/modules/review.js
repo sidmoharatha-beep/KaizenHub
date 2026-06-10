@@ -13,13 +13,15 @@ export async function renderReviewQueue() {
   const canReviewSafety = ['Manager', 'Admin'].includes(role);
   const canReviewQuality = ['Manager', 'Admin'].includes(role);
   const canReviewKaizen = ['Manager', 'Admin'].includes(role);
+  const canReviewKaizenImpl = ['Manager', 'Admin'].includes(role);
   const canReviewQC = ['Manager', 'QC Panel Member', 'Admin'].includes(role);
   const canReviewBehavioral = ['Manager', 'SIC', 'HR', 'Admin'].includes(role);
 
   const tabs = [
     canReviewSafety && { id: 'safety', label: 'Safety' },
     canReviewQuality && { id: 'quality', label: 'Quality' },
-    canReviewKaizen && { id: 'kaizen', label: 'Kaizen' },
+    canReviewKaizen && { id: 'kaizen', label: 'Kaizen Ideas' },
+    canReviewKaizenImpl && { id: 'kaizen-impl', label: 'Kaizen Implementations' },
     canReviewQC && { id: 'qc', label: 'Quality Circle Project' },
     canReviewBehavioral && { id: 'behavioral', label: 'Behavioral' },
   ].filter(Boolean);
@@ -57,6 +59,7 @@ async function loadReviewTab(type) {
   if (type === 'safety') await loadSafetyReview(container);
   else if (type === 'quality') await loadQualityReview(container);
   else if (type === 'kaizen') await loadKaizenReview(container);
+  else if (type === 'kaizen-impl') await loadKaizenImplReview(container);
   else if (type === 'qc') await loadQCReview(container);
   else if (type === 'behavioral') await loadBehavioralReview(container);
 }
@@ -171,6 +174,31 @@ async function loadBehavioralReview(container) {
   `).join('');
 }
 
+
+async function loadKaizenImplReview(container) {
+  const res = await apiFetch('/api/kaizen/submit?status=Implemented');
+  const items = res.ok ? (res.data.submissions || []) : [];
+  if (!items.length) { container.innerHTML = '<div class="empty">No implementations pending your review.</div>'; return; }
+
+  container.innerHTML = items.map(item => `
+    <div class="sub-card pending" data-id="${item.id}">
+      <h4>${esc(item.title)}</h4>
+      <div class="sub-meta">${esc(item.submitter_name)} · ${fmtDate(item.created_at)} · ${statusBadge(item.status)}</div>
+      <div class="sub-excerpt">${esc(item.description || item.problem || '')}</div>
+      ${item.attachment_url ? '<div style="margin:8px 0"><img src="/api/attachments/' + item.attachment_url + '" style="max-height:120px;border-radius:8px;border:1px solid var(--border)" alt="evidence"/></div>' : ''}
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+        Mode: ${esc(item.implementation_mode || 'self')}
+        ${item.tangible_benefits ? ' · Tangible: ' + esc(item.tangible_benefits) : ''}
+      </div>
+      <textarea id="fb-kaizen-impl-${item.id}" class="feedback-box" rows="2" placeholder="Review comment (optional)..."></textarea>
+      <div class="action-row">
+        <button class="btn-approve" onclick="reviewImplAction(${item.id},'approve')">✅ Approve & Send to Evaluator</button>
+        <button class="btn-reject" onclick="reviewImplAction(${item.id},'reject')">❌ Reject Implementation</button>
+      </div>
+    </div>
+  `).join('');
+}
+
 window.reviewAction = async function(type, id, action) {
   const commentEl = document.getElementById('fb-' + type + '-' + id);
   const manager_comment = commentEl?.value?.trim() || '';
@@ -213,3 +241,15 @@ window.reviewAction = async function(type, id, action) {
 window.openQCScreen = function(projectId) {
   toast('Quality Circle Project 12-Step screening: use Admin panel for detailed scoring. Project ID: ' + projectId);
 };
+
+window.reviewImplAction = async function(id, action) {
+  const commentEl = document.getElementById('fb-kaizen-impl-' + id);
+  const comment = commentEl?.value?.trim() || '';
+  if (action === 'reject' && !comment) { toast('Please provide a rejection reason'); commentEl?.focus(); return; }
+  const res = await apiFetch('/api/kaizen/review-impl', { method: 'POST', body: JSON.stringify({ id, action, comment }) });
+  if (!res.ok) { toast('Error: ' + (res.data?.error || 'Failed')); return; }
+  toast(res.data?.message || (action === 'approve' ? 'Approved!' : 'Rejected'));
+  const activeTab = document.querySelector('#review-tabs .tab-btn.active');
+  if (activeTab) activeTab.click();
+};
+
