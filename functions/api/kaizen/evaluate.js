@@ -49,6 +49,18 @@ export const onRequestPost = async ({ request, env, data }) => {
   }
 
   try {
+    // Determine evaluator_role from department code
+    const evalUser = await env.DB.prepare(
+      'SELECT u.id, UPPER(d.code) as dept_code FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.id = ?'
+    ).bind(user.id).first();
+
+    const deptCode = evalUser?.dept_code || '';
+    let evaluatorRole = 'MANEX'; // default
+    if (deptCode === 'QA' || deptCode.includes('QUAL')) evaluatorRole = 'Quality';
+    else if (deptCode === 'MAINT' || deptCode.includes('MAIN')) evaluatorRole = 'Maintenance';
+    else if (deptCode === 'SAFE' || deptCode.includes('SAF')) evaluatorRole = 'Safety';
+    else if (deptCode === 'MANEX' || deptCode.includes('MAN')) evaluatorRole = 'MANEX';
+
     // Upsert evaluation
     await env.DB.prepare(`
       INSERT INTO kaizen_evaluations (kaizen_id, evaluator_id, evaluator_role,
@@ -58,7 +70,7 @@ export const onRequestPost = async ({ request, env, data }) => {
         ease_implementation = ?, impact_quality = ?, impact_safety = ?,
         impact_yield = ?, cost_saving = ?, comment = ?, evaluated_at = CURRENT_TIMESTAMP
     `).bind(
-      kaizen_id, user.id, 'Selected',
+      kaizen_id, user.id, evaluatorRole,
       parseInt(ease_implementation), parseInt(impact_quality), parseInt(impact_safety),
       parseInt(impact_yield), parseInt(cost_saving), comment || null,
       parseInt(ease_implementation), parseInt(impact_quality), parseInt(impact_safety),
