@@ -16,7 +16,7 @@ export const onRequestPost = async ({ request, env, data }) => {
   const kaizen = await env.DB.prepare('SELECT * FROM kaizen_ideas WHERE id = ?').bind(id).first();
   if (!kaizen) return err('Kaizen not found', 404);
   if (kaizen.status !== 'Implemented') return err('Kaizen must be in Implemented status. Current: ' + kaizen.status, 400);
-  if (user.role === 'Manager' && kaizen.approver_id !== user.id) return err('You are not the approver for this kaizen', 403);
+  if (user.role === 'Manager' && String(kaizen.approver_id) !== String(user.id)) return err('You are not the approver for this kaizen', 403);
 
   if (action === 'reject') {
     await env.DB.prepare('UPDATE kaizen_ideas SET status = ? WHERE id = ?').bind('Rejected', id).run();

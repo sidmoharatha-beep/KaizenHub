@@ -30,7 +30,7 @@ export async function onRequestPost({ request, env, data }) {
   const evalYear = parseInt(year) || new Date().getFullYear();
 
   if (evalMonth < 1 || evalMonth > 12) return err('Month must be 1-12', 400);
-  if (targetUserId === user.id) return err('Cannot evaluate yourself', 400);
+  if (String(targetUserId) === String(user.id)) return err('Cannot evaluate yourself', 400);
 
   // Validate all 8 criteria (1-3)
   const criteria = { responsiveness, preventive_value, ownership, attitude, communication, problem_solving, teamwork, standards_safety };
@@ -47,7 +47,7 @@ export async function onRequestPost({ request, env, data }) {
   if (!targetUser) return err('Target user not found or inactive', 404);
 
   // Verify evaluator has authority (SIC/Manager for this employee)
-  if (user.role === 'SIC' && targetUser.sic_id !== user.id) {
+  if (user.role === 'SIC' && String(targetUser.sic_id) !== String(user.id)) {
     return err('You can only evaluate employees assigned to you as SIC', 403);
   }
   // Managers can evaluate any operator in the organization

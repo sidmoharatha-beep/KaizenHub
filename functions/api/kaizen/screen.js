@@ -35,7 +35,7 @@ export const onRequestPost = async ({ request, env, data }) => {
   }
 
   // Verify authority
-  if (user.role === 'Manager' && kaizen.approver_id !== user.id) {
+  if (user.role === 'Manager' && String(kaizen.approver_id) !== String(user.id)) {
     return err('You are not the assigned approver for this kaizen', 403);
   }
 

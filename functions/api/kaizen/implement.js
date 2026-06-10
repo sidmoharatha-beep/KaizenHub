@@ -27,7 +27,7 @@ export const onRequestPost = async ({ request, env, data }) => {
   }
 
   // Verify user is the owner or co-implementor
-  if (kaizen.user_id !== user.id && kaizen.co_implementor_id !== user.id) {
+  if (String(kaizen.user_id) !== String(user.id) && String(kaizen.co_implementor_id) !== String(user.id)) {
     return err('Only the kaizen owner or co-implementor can submit implementation evidence', 403);
   }
 

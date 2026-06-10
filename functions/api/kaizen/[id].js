@@ -22,9 +22,9 @@ export const onRequestGet = async ({ params, env, data }) => {
     if (!kaizen) return err('Kaizen idea not found', 404);
 
     // Check access: owner, co-implementor, approver, or reviewer role
-    const canView = kaizen.user_id === user.id ||
-      kaizen.co_implementor_id === user.id ||
-      kaizen.approver_id === user.id ||
+    const canView = String(kaizen.user_id) === String(user.id) ||
+      String(kaizen.co_implementor_id) === String(user.id) ||
+      String(kaizen.approver_id) === String(user.id) ||
       ['Manager', 'Admin', 'QC Panel Member', 'HR'].includes(user.role);
     if (!canView) return err('Access denied', 403);
 

@@ -22,8 +22,8 @@ export async function onRequestGet({ params, env, data }) {
     if (!evaluation) return err('Evaluation not found', 404);
 
     // Access check: target employee, evaluator, HR, Admin
-    const canView = evaluation.user_id === user.id ||
-      evaluation.evaluator_id === user.id ||
+    const canView = String(evaluation.user_id) === String(user.id) ||
+      String(evaluation.evaluator_id) === String(user.id) ||
       ['HR', 'Admin'].includes(user.role);
     if (!canView) return err('Access denied', 403);
 

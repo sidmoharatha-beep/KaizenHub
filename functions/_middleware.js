@@ -29,7 +29,7 @@ export const onRequest = async (context) => {
   if (!token) return jsonErr('Missing token', 401);
 
   const session = await env.DB.prepare(`
-    SELECT s.user_id, u.id, u.employee_id, u.emp_id, u.email, u.name, u.full_name,
+    SELECT s.user_id, u.id as user_pk, u.employee_id, u.emp_id, u.email, u.name, u.full_name,
            u.role_id, u.department_id, u.shift_id, u.manager_id, u.sic_id, u.unit,
            u.is_active, r.name as role
     FROM sessions s
@@ -42,7 +42,7 @@ export const onRequest = async (context) => {
   if (session.is_active === 0) return jsonErr('Account deactivated', 403);
 
   data.user = {
-    id: session.id,
+    id: session.user_pk,
     employee_id: session.employee_id || session.emp_id,
     name: session.full_name || session.name,
     email: session.email,

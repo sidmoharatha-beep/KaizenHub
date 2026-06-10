@@ -23,7 +23,7 @@ export async function onRequestPost({ request, env, data }) {
   ).bind(project_id).first();
 
   if (!project) return err('QC project not found', 404);
-  if (project.owner_id !== user.id && !['Admin'].includes(user.role)) {
+  if (String(project.owner_id) !== String(user.id) && !['Admin'].includes(user.role)) {
     return err('Only the project owner can manage team members', 403);
   }
   if (!['Draft'].includes(project.status)) {

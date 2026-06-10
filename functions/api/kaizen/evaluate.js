@@ -44,7 +44,7 @@ export const onRequestPost = async ({ request, env, data }) => {
   if (!kaizen.selected_evaluator_id) {
     return err('This kaizen has no selected evaluator. Please contact the submitter to resubmit.', 400);
   }
-  if (kaizen.selected_evaluator_id !== user.id) {
+  if (String(kaizen.selected_evaluator_id) !== String(user.id)) {
     return err('You are not the selected evaluator for this kaizen.', 403);
   }
 

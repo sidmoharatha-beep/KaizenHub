@@ -45,8 +45,11 @@ export async function onRequestPost({ request, env, data }) {
     if (kaizen.status !== 'Approved') {
       return err(`Cannot submit implementation for status: ${kaizen.status}. Must be Approved.`, 400);
     }
-    if (kaizen.user_id !== user.id && kaizen.co_implementor_id !== user.id) {
-      return err('Only the kaizen owner or co-implementor can submit implementation', 403);
+    const isOwner  = String(kaizen.user_id) === String(user.id);
+    const isCoImpl = kaizen.co_implementor_id !== null && String(kaizen.co_implementor_id) === String(user.id);
+    const isAdmin  = user.role === 'Admin';
+    if (!isOwner && !isCoImpl && !isAdmin) {
+      return err(`Permission denied: kaizen owner=${kaizen.user_id}, you=${user.id}`, 403);
     }
 
     const implMode = implementation_mode || 'self';
@@ -65,7 +68,7 @@ export async function onRequestPost({ request, env, data }) {
     if (coImpId) {
       const coImp = await env.DB.prepare(`SELECT id FROM users WHERE id = ? AND is_active = 1`).bind(coImpId).first();
       if (!coImp) return err('Co-implementor not found or inactive', 400);
-      if (coImpId === user.id) return err('Co-implementor cannot be yourself', 400);
+      if (String(coImpId) === String(user.id)) return err('Co-implementor cannot be yourself', 400);
     }
 
     // Check no prior implementation
