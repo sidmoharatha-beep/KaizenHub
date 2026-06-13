@@ -1,6 +1,6 @@
 import { json, err, uuid, verifyPassword } from './_utils.js';
 
-export async function onRequestOptions() {
+export const onRequestOptions = async () => {
   return new Response(null, {
     status: 204,
     headers: {
@@ -12,7 +12,7 @@ export async function onRequestOptions() {
   });
 }
 
-export async function onRequestPost({ request, env }) {
+export const onRequestPost = async ({ request, env }) => {
   try {
     const { email, password } = await request.json();
     

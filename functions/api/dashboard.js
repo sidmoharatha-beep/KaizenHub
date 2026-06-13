@@ -1,6 +1,6 @@
 import { json, err } from './_utils.js';
 
-export async function onRequestGet({ request, env, data }) {
+export const onRequestGet = async ({ request, env, data }) => {
   const user = data.user;
 
   try {
